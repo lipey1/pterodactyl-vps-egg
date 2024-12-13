@@ -2,9 +2,6 @@
 
 # Pterodactyl VPS Egg
 
-[![License](https://img.shields.io/github/license/ysdragon/Pterodactyl-VPS-Egg)](https://github.com/ysdragon/Pterodactyl-VPS-Egg/blob/main/LICENSE)
-[![CodeFactor](https://www.codefactor.io/repository/github/ysdragon/pterodactyl-vps-egg/badge)](https://www.codefactor.io/repository/github/ysdragon/pterodactyl-vps-egg)
-
 A powerful and lightweight Virtual Private Server (VPS) egg for Pterodactyl Panel, supporting multiple architectures and operating systems.
 </div>
 
@@ -69,12 +66,9 @@ A powerful and lightweight Virtual Private Server (VPS) egg for Pterodactyl Pane
 
 3. **Deploy Your VPS**
    - Create a new server using the VPS egg
-   - Configure resources
+   - Configure resources      
    - Start your instance
 
 ## Contributing
 
 Contributions are welcome. If you have any suggestions, improvements, or bug fixes, feel free to submit a pull request.
-
-## License
-This project is open-source and available under the MIT License. See the [LICENSE](https://github.com/ysdragon/Pterodactyl-VPS-Egg/blob/main/LICENSE) file for more details.
