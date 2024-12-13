@@ -5,12 +5,12 @@
         "update_url": null
     },
     "exported_at": "2024-03-21T00:00:00-03:00",
-    "name": "Ubuntu VPS",
-    "author": "support@pterodactyl.io",
-    "description": "Ubuntu VPS com seleção interativa de versão durante a instalação.",
+    "name": "VPS - LINUX",
+    "author": "felipeestrela2006@gmail.com",
+    "description": "VPS Linux com seleção interativa de distribuição",
     "features": null,
     "docker_images": {
-        "Ubuntu Latest": "ubuntu:latest"
+        "VPS Base": "debian:latest"
     },
     "file_denylist": [],
     "startup": "bash /entrypoint.sh",
@@ -22,8 +22,8 @@
     },
     "scripts": {
         "installation": {
-            "script": "apt-get update && apt-get install -y curl && curl -Lo install.sh https://raw.githubusercontent.com/lipey1/ubuntu-vps-egg/main/install.sh && chmod +x install.sh && bash install.sh",
-            "container": "ubuntu:latest",
+            "script": "apt-get update && apt-get install -y debootstrap curl && bash <(curl -s https://raw.githubusercontent.com/lipey1/ubuntu-vps-egg/main/install.sh)",
+            "container": "debian:latest",
             "entrypoint": "bash"
         }
     },
