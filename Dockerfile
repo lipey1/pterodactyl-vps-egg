@@ -4,9 +4,6 @@ FROM ubuntu:noble
 # Set the environment variable to disable interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Set the PRoot version
-ENV PROOT_VERSION=5.4.0
-
 # Install necessary packages
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -18,13 +15,17 @@ RUN apt-get update && \
         bzip2 \
         sudo \
         locales \
-        adduser \
-        proot && \
+        adduser && \
     rm -rf /var/lib/apt/lists/*
 
 # Configure locale
 RUN update-locale lang=en_US.UTF-8 && \
     dpkg-reconfigure --frontend noninteractive locales
+
+# Install PRoot
+RUN mkdir -p /usr/local/bin && \
+    curl -Ls "https://github.com/proot-me/proot/releases/latest/download/proot-$(uname -m)-static" -o /usr/local/bin/proot && \
+    chmod 755 /usr/local/bin/proot
 
 # Create a non-root user
 RUN useradd -m -d /home/container -s /bin/bash container

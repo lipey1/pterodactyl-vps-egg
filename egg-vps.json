@@ -7,10 +7,10 @@
     "exported_at": "2024-03-21T00:00:00-03:00",
     "name": "VPS - LINUX",
     "author": "felipeestrela2006@gmail.com",
-    "description": "VPS Linux com seleção interativa de distribuição",
+    "description": "Escolha sua distribuição Linux preferida durante a instalação",
     "features": null,
     "docker_images": {
-        "VPS Base": "debian:latest"
+        "ghcr.io/lipey1/pterodactyl-vps-egg:latest": "ghcr.io/lipey1/pterodactyl-vps-egg:latest"
     },
     "file_denylist": [],
     "startup": "bash /entrypoint.sh",
@@ -22,8 +22,8 @@
     },
     "scripts": {
         "installation": {
-            "script": "apt-get update && apt-get install -y debootstrap curl && bash <(curl -s https://raw.githubusercontent.com/lipey1/ubuntu-vps-egg/main/install.sh)",
-            "container": "debian:latest",
+            "script": "#!\/bin\/bash\r\n\r\ncd \/mnt\/server\r\n\r\n# Executa o script de instalação interativo\r\n./install.sh",
+            "container": "ghcr.io/lipey1/pterodactyl-vps-egg:latest",
             "entrypoint": "bash"
         }
     },
