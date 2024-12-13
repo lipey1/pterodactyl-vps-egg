@@ -20,7 +20,16 @@ cleanup() {
 
 # Function to get formatted directory
 get_formatted_dir() {
-    printf "%s" "$PWD"
+    current_dir="$PWD"
+    if [[ "$current_dir" == "/home/container"* ]]; then
+        printf "%s" "${current_dir#/home/container}"
+        if [ "$current_dir" = "/home/container" ]; then
+            printf "/"
+        fi
+    else
+        cd /home/container
+        printf "/"
+    fi
 }
 
 # Function to print the banner
@@ -58,15 +67,34 @@ save_to_history() {
     fi
 }
 
+# Function to reinstall the OS
+reinstall() {
+    # Source the /etc/os-release file to get OS information
+    . /etc/os-release
+
+    printf "\n${GREEN}Reinstalling....${NC}\n"
+    
+    # Remove everything
+    if [ "$ID" = "alpine" ] || [ "$ID" = "chimera" ]; then
+        rm -rf / > /dev/null 2>&1
+    else
+        rm -rf --no-preserve-root / > /dev/null 2>&1
+    fi
+    
+    # Force exit to trigger container restart
+    exit 2
+}
+
 # Function to print help message
 print_help_message() {
-    printf "${PURPLE}╭────────────────────────────────────────────────────────────────────────────────╮${NC}\n"
+    printf "${PURPLE}╭──────────────────────────────���─────────────────────────────────────────────────╮${NC}\n"
     printf "${PURPLE}│                                                                                │${NC}\n"
     printf "${PURPLE}│                             Available Commands                                 │${NC}\n"
     printf "${PURPLE}│                                                                                │${NC}\n"
     printf "${PURPLE}│                      ${YELLOW}clear, cls${GREEN}         - Clear the screen.                    ${PURPLE}│${NC}\n"
     printf "${PURPLE}│                      ${YELLOW}exit${GREEN}               - Shutdown the server.                 ${PURPLE}│${NC}\n"
     printf "${PURPLE}│                      ${YELLOW}history${GREEN}            - Show command history.                ${PURPLE}│${NC}\n"
+    printf "${PURPLE}│                      ${YELLOW}reinstall${GREEN}          - Reinstall the server.                ${PURPLE}│${NC}\n"
     printf "${PURPLE}│                      ${YELLOW}help${GREEN}               - Display this help message.           ${PURPLE}│${NC}\n"
     printf "${PURPLE}│                                                                                │${NC}\n"
     printf "${PURPLE}╰────────────────────────────────────────────────────────────────────────────────╯${NC}\n"
@@ -96,13 +124,47 @@ execute_command() {
             print_prompt
             return 0
         ;;
+        "reinstall")
+            reinstall
+        ;;
         "help")
             print_help_message
             print_prompt
             return 0
         ;;
+        "cd "*)
+            # Extract the target directory
+            target_dir="${cmd#cd }"
+            
+            # Get the absolute path
+            if [[ "$target_dir" = /* ]]; then
+                absolute_path="$target_dir"
+            else
+                absolute_path="$(cd "$PWD" && cd "$target_dir" 2>/dev/null && pwd)"
+            fi
+            
+            # Check if the path is within /home/container
+            if [[ "$absolute_path" == "/home/container"* ]]; then
+                eval "$cmd"
+            else
+                printf "${RED}Access denied: Cannot navigate outside of /home/container${NC}\n"
+                cd /home/container
+            fi
+            print_prompt
+            return 0
+        ;;
         *)
-            eval "$cmd"
+            # Check if command might change directory
+            if [[ "$cmd" == *"cd "* ]] || [[ "$cmd" == *"pushd"* ]] || [[ "$cmd" == *"popd"* ]]; then
+                eval "$cmd"
+                # If we ended up outside /home/container, go back
+                if [[ "$PWD" != "/home/container"* ]]; then
+                    cd /home/container
+                    printf "${RED}Access denied: Cannot navigate outside of /home/container${NC}\n"
+                fi
+            else
+                eval "$cmd"
+            fi
             print_prompt
             return 0
         ;;
@@ -129,6 +191,9 @@ print_instructions
 
 # Print initial command
 printf "${GREEN}root@${HOSTNAME}${NC}:${RED}$(get_formatted_dir)${NC}# "
+
+# Ensure we start in /home/container
+cd /home/container
 
 # Main command loop
 while true; do
