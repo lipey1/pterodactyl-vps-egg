@@ -61,7 +61,7 @@ print_banner() {
     printf "${GREEN}│                                                                                │${NC}\n"
     printf "${GREEN}│                             LINUX VPS                                          │${NC}\n"
     printf "${GREEN}│                                                                                │${NC}\n"
-    printf "${GREEN}│                           ${RED}© 2021 - 2024 ${PURPLE}@lipey1${GREEN}                                │${NC}\n"
+    printf "${GREEN}│                           ${RED}© 2021 - 2024 ${PURPLE}@lipey1${GREEN}                               │${NC}\n"
     printf "${GREEN}│                                                                                │${NC}\n"
     printf "${GREEN}╰────────────────────────────────────────────────────────────────────────────────╯${NC}\n"
     printf "                                                                                               \n"
@@ -73,7 +73,8 @@ print_instructions() {
 
 # Function to print prompt
 print_prompt() {
-    printf "\n${GREEN}root@${HOSTNAME}${NC}:${RED}$(get_formatted_dir)${NC}# "
+    user="$1"
+    printf "\n${GREEN}${user}@${HOSTNAME}${NC}:${RED}$(get_formatted_dir)${NC}# "
 }
 
 # Function to save command to history
@@ -119,6 +120,7 @@ print_help_message() {
 # Function to handle command execution
 execute_command() {
     cmd="$1"
+    user="$2"
     
     # Save command to history
     save_to_history "$cmd"
@@ -127,7 +129,7 @@ execute_command() {
     case "$cmd" in
         "clear"|"cls")
             print_banner
-            print_prompt
+            print_prompt "$user"
             return 0
         ;;
         "exit")
@@ -137,7 +139,7 @@ execute_command() {
             if [ -f "$HISTORY_FILE" ]; then
                 cat "$HISTORY_FILE"
             fi
-            print_prompt
+            print_prompt "$user"
             return 0
         ;;
         "reinstall")
@@ -147,12 +149,12 @@ execute_command() {
         ;;
         "help")
             print_help_message
-            print_prompt
+            print_prompt "$user"
             return 0
         ;;
         *)
             eval "$cmd"
-            print_prompt
+            print_prompt "$user"
             return 0
         ;;
     esac
@@ -160,11 +162,13 @@ execute_command() {
 
 # Function to run command prompt for a specific user
 run_prompt() {
+    user="$1"
     read -r cmd
     
-    execute_command "$cmd"
-    printf "\n${GREEN}root@${HOSTNAME}${NC}:${RED}$(get_formatted_dir)${NC}# "
+    execute_command "$cmd" "$user"
+    print_prompt "$user"
 }
+
 
 # Create history file if it doesn't exist
 touch "$HISTORY_FILE"
@@ -179,9 +183,9 @@ print_banner
 print_instructions
 
 # Print initial command
-printf "${GREEN}root@${HOSTNAME}${NC}:${RED}$(get_formatted_dir)${NC}# "
+printf "${GREEN}root@${HOSTNAME}${NC}:${RED}$(get_formatted_dir)${NC}#\n"
 
 # Main command loop
 while true; do
-    run_prompt
+    run_prompt "user"
 done

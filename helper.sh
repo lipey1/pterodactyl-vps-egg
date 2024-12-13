@@ -5,11 +5,6 @@ parse_ports() {
     local config_file="$HOME/vps.config"
     local port_args=""
     
-    # Create config file if it doesn't exist
-    if [ ! -f "$config_file" ]; then
-        touch "$config_file"
-    fi
-    
     while read -r line; do
         case "$line" in
             internalip=*) ;;
@@ -23,36 +18,17 @@ parse_ports() {
             ;;
         esac
     done <"$config_file"
-    
-    echo "$port_args"
 }
 
-# Execute PRoot environment with full root access
+# Execute PRoot environment
 exec_proot() {
     local port_args=$(parse_ports)
     
     /usr/bin/proot \
-    --rootfs="/" \
-    -0 \
-    -r / \
-    -w "/root" \
-    -b /dev \
-    -b /sys \
-    -b /proc \
-    -b /etc/resolv.conf \
-    -b /etc/sudoers \
-    -b /etc/sudoers.d \
-    -b /usr/bin/sudo \
-    -b /usr/lib \
-    -b /usr/libexec \
-    -b /var/run/sudo \
-    -b /tmp \
-    -b /var/tmp \
-    -b /run \
-    -b /var/run \
-    $port_args \
-    /bin/bash -c "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin exec /run.sh"
+    --rootfs="${HOME}" \
+    -0 -w "${HOME}" \
+    -b /dev -b /sys -b /proc -b /etc/resolv.conf \
+    /bin/sh "/run.sh"
 }
 
-# Execute with root privileges
 exec_proot
