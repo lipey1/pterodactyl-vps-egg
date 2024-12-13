@@ -9,7 +9,7 @@ NC='\033[0m'
 
 # Configuration
 HOSTNAME="MyVPS"
-HISTORY_FILE="/root/.custom_shell_history"
+HISTORY_FILE="/home/container/.custom_shell_history"
 MAX_HISTORY=1000
 
 # Function to handle cleanup on exit
@@ -58,11 +58,13 @@ print_prompt() {
 save_to_history() {
     cmd="$1"
     if [ -n "$cmd" ] && [ "$cmd" != "exit" ]; then
-        printf "%s\n" "$cmd" >> "$HISTORY_FILE"
+        # Create history file if it doesn't exist
+        touch "$HISTORY_FILE" 2>/dev/null || return 0
+        printf "%s\n" "$cmd" >> "$HISTORY_FILE" 2>/dev/null || return 0
         # Keep only last MAX_HISTORY lines
         if [ -f "$HISTORY_FILE" ]; then
-            tail -n "$MAX_HISTORY" "$HISTORY_FILE" > "$HISTORY_FILE.tmp"
-            mv "$HISTORY_FILE.tmp" "$HISTORY_FILE"
+            tail -n "$MAX_HISTORY" "$HISTORY_FILE" > "$HISTORY_FILE.tmp" 2>/dev/null && \
+            mv "$HISTORY_FILE.tmp" "$HISTORY_FILE" 2>/dev/null || return 0
         fi
     fi
 }
@@ -87,7 +89,7 @@ reinstall() {
 
 # Function to print help message
 print_help_message() {
-    printf "${PURPLE}╭──────────────────────────────���─────────────────────────────────────────────────╮${NC}\n"
+    printf "${PURPLE}╭────────────────────────────────────────────────────────────────────────────────╮${NC}\n"
     printf "${PURPLE}│                                                                                │${NC}\n"
     printf "${PURPLE}│                             Available Commands                                 │${NC}\n"
     printf "${PURPLE}│                                                                                │${NC}\n"
@@ -136,19 +138,15 @@ execute_command() {
             # Extract the target directory
             target_dir="${cmd#cd }"
             
-            # Get the absolute path
-            if [[ "$target_dir" = /* ]]; then
-                absolute_path="$target_dir"
+            # Try to change to the directory
+            if cd "$target_dir" 2>/dev/null; then
+                # Check if we're still in /home/container
+                if [[ "$PWD" != "/home/container"* ]]; then
+                    cd /home/container
+                    printf "${RED}Access denied: Cannot navigate outside of /home/container${NC}\n"
+                fi
             else
-                absolute_path="$(cd "$PWD" && cd "$target_dir" 2>/dev/null && pwd)"
-            fi
-            
-            # Check if the path is within /home/container
-            if [[ "$absolute_path" == "/home/container"* ]]; then
-                eval "$cmd"
-            else
-                printf "${RED}Access denied: Cannot navigate outside of /home/container${NC}\n"
-                cd /home/container
+                printf "${RED}Directory not found: $target_dir${NC}\n"
             fi
             print_prompt
             return 0
@@ -156,7 +154,11 @@ execute_command() {
         *)
             # Check if command might change directory
             if [[ "$cmd" == *"cd "* ]] || [[ "$cmd" == *"pushd"* ]] || [[ "$cmd" == *"popd"* ]]; then
-                eval "$cmd"
+                eval "$cmd" 2>/dev/null || {
+                    printf "${RED}Command failed: $cmd${NC}\n"
+                    print_prompt
+                    return 1
+                }
                 # If we ended up outside /home/container, go back
                 if [[ "$PWD" != "/home/container"* ]]; then
                     cd /home/container

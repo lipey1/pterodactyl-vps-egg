@@ -23,10 +23,9 @@ RUN update-locale lang=en_US.UTF-8 && \
     dpkg-reconfigure --frontend noninteractive locales
 
 # Set up working directory and history file
-RUN mkdir -p /root && \
-    touch /root/.custom_shell_history && \
-    chmod 777 /root && \
-    chmod 666 /root/.custom_shell_history
+RUN mkdir -p /home/container && \
+    touch /home/container/.custom_shell_history && \
+    chmod -R 777 /home/container
 
 # Set up working directory
 WORKDIR /home/container
