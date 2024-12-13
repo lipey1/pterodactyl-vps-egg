@@ -41,8 +41,7 @@ print_banner() {
     printf "${GREEN}│                                                                                │${NC}\n"
     printf "${GREEN}│                           ${RED}© 2021 - 2024 ${PURPLE}@lipey1${GREEN}                                │${NC}\n"
     printf "${GREEN}│                                                                                │${NC}\n"
-    printf "${GREEN}╰────────────────────────────────────────────────────────────────────────────────╯${NC}\n"
-    printf "                                                                                               \n"
+    printf "${GREEN}╰────────────────────────────────────────────────────────────────────────────────╯${NC}\n\n"
 }
 
 print_instructions() {
@@ -51,7 +50,7 @@ print_instructions() {
 
 # Function to print prompt
 print_prompt() {
-    printf "\n${GREEN}root@${HOSTNAME}${NC}:${RED}$(get_formatted_dir)${NC}# "
+    printf "root@MyVPS:# "
 }
 
 # Function to save command to history
@@ -99,7 +98,7 @@ print_help_message() {
     printf "${PURPLE}│                      ${YELLOW}reinstall${GREEN}          - Reinstall the server.                ${PURPLE}│${NC}\n"
     printf "${PURPLE}│                      ${YELLOW}help${GREEN}               - Display this help message.           ${PURPLE}│${NC}\n"
     printf "${PURPLE}│                                                                                │${NC}\n"
-    printf "${PURPLE}╰────────────────────────────────────────────────────────────────────────────────╯${NC}\n"
+    printf "${PURPLE}╰───��────────────────────────────────────────────────────────────────────────────╯${NC}\n"
 }
 
 # Function to handle command execution
@@ -192,7 +191,7 @@ print_banner
 print_instructions
 
 # Print initial command
-printf "${GREEN}root@${HOSTNAME}${NC}:${RED}$(get_formatted_dir)${NC}# "
+print_prompt
 
 # Ensure we start in /home/container
 cd /home/container
