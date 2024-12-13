@@ -29,7 +29,6 @@ exec_proot() {
     -0 -w "${HOME}" \
     -b /dev -b /sys -b /proc -b /etc/resolv.conf \
     $port_args \
-    --kill-on-exit \
     /bin/sh "/run.sh"
 }
 
