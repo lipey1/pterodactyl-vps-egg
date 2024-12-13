@@ -45,7 +45,6 @@ exec_proot() {
     -b /usr/lib \
     -b /usr/libexec \
     -b /var/run/sudo \
-    --link2symlink \
     $port_args \
     /bin/sh -c "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin exec /run.sh"
 }

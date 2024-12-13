@@ -40,5 +40,4 @@ fi
     -b /usr/lib \
     -b /usr/libexec \
     -b /var/run/sudo \
-    --link2symlink \
     /bin/bash "/run.sh"
