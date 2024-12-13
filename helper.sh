@@ -18,6 +18,8 @@ parse_ports() {
             ;;
         esac
     done <"$config_file"
+    
+    echo "$port_args"
 }
 
 # Execute PRoot environment
@@ -29,7 +31,9 @@ exec_proot() {
     -0 -w "${HOME}" \
     -b /dev -b /sys -b /proc -b /etc/resolv.conf \
     $port_args \
-    /bin/sh "/run.sh"
+    --kill-on-exit \
+    /bin/sh -c "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin exec /run.sh"
 }
 
+# Execute with root privileges by default
 exec_proot
