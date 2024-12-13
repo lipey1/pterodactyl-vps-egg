@@ -27,13 +27,14 @@ parse_ports() {
     echo "$port_args"
 }
 
-# Execute PRoot environment
+# Execute PRoot environment with full root access
 exec_proot() {
     local port_args=$(parse_ports)
     
     /usr/bin/proot \
     --rootfs="/" \
     -0 \
+    -r / \
     -w "/root" \
     -b /dev \
     -b /sys \
@@ -45,9 +46,13 @@ exec_proot() {
     -b /usr/lib \
     -b /usr/libexec \
     -b /var/run/sudo \
+    -b /tmp \
+    -b /var/tmp \
+    -b /run \
+    -b /var/run \
     $port_args \
-    /bin/sh -c "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin exec /run.sh"
+    /bin/bash -c "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin exec /run.sh"
 }
 
-# Execute with root privileges by default
+# Execute with root privileges
 exec_proot
