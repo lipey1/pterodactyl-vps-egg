@@ -10,13 +10,9 @@ MODIFIED_STARTUP=$(eval echo $(echo ${STARTUP} | sed -e 's/{{/${/g' -e 's/}}/}/g
 export INTERNAL_IP=$(ip route get 1 | awk '{print $NF;exit}')
 
 # Check if already installed
-if [ ! -e "$HOME/.installed" ]; then
-    /usr/bin/proot \
-    --rootfs="/" \
-    -0 -w "/root" \
-    -b /dev -b /sys -b /proc -b /etc/resolv.conf \
-    /bin/bash "/install.sh" || exit 1
+if [ ! -e "/.installed" ]; then
+    bash "/install.sh" || exit 1
 fi
 
-# Run the startup helper script
-bash /helper.sh
+# Run the server
+bash "/run.sh"
