@@ -17,14 +17,23 @@ RUN apt-get update && \
         locales \
         adduser \
         proot && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    # Configure sudo
+    mkdir -p /etc/sudoers.d && \
+    echo "container ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/container && \
+    chmod 440 /etc/sudoers.d/container && \
+    # Create necessary directories for sudo
+    mkdir -p /var/run/sudo && \
+    chmod 755 /var/run/sudo
 
 # Configure locale
 RUN update-locale lang=en_US.UTF-8 && \
     dpkg-reconfigure --frontend noninteractive locales
 
 # Create a non-root user
-RUN useradd -m -d /home/container -s /bin/bash container
+RUN useradd -m -d /home/container -s /bin/bash container && \
+    echo "container:container" | chpasswd && \
+    adduser container sudo
 
 # Switch to the new user
 USER container

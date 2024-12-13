@@ -11,13 +11,34 @@ export INTERNAL_IP=$(ip route get 1 | awk '{print $NF;exit}')
 
 # Check if already installed
 if [ ! -e "$HOME/.installed" ]; then
-    /usr/bin/proot \
-    --rootfs="/" \
-    -0 -w "/root" \
-    -b /dev -b /sys -b /proc -b /etc/resolv.conf \
-    --kill-on-exit \
-    /bin/bash "/install.sh" || exit 1
+    # Configure sudo
+    echo "container ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/container
+    chmod 440 /etc/sudoers.d/container
+    
+    # Set root password for su
+    echo "root:container" | chpasswd
+    
+    # Give container user proper permissions
+    chown -R container:container /home/container
+    
+    # Mark as installed
+    touch "$HOME/.installed"
 fi
 
-# Run the startup helper script
-bash /helper.sh
+# Run PRoot with proper configuration
+/usr/bin/proot \
+    --rootfs="/" \
+    -0 \
+    -w "/root" \
+    -b /dev \
+    -b /sys \
+    -b /proc \
+    -b /etc/resolv.conf \
+    -b /etc/sudoers \
+    -b /etc/sudoers.d \
+    -b /usr/bin/sudo \
+    -b /usr/lib \
+    -b /usr/libexec \
+    -b /var/run/sudo \
+    --link2symlink \
+    /bin/bash "/run.sh"
