@@ -46,6 +46,7 @@ print_banner() {
 
 print_instructions() {
     printf "${YELLOW}Type 'help' to view a list of available custom commands.${NC}\n\n"
+    printf "${GREEN}root:${RED}# "
 }
 
 # Function to print prompt
