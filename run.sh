@@ -46,7 +46,6 @@ print_banner() {
 
 print_instructions() {
     printf "${YELLOW}Type 'help' to view a list of available custom commands.${NC}\n\n"
-    printf "${GREEN}root@${HOSTNAME}${NC}:${RED}$(get_formatted_dir)${NC}# \n"
 }
 
 # Function to print prompt
@@ -188,8 +187,7 @@ execute_command() {
 
 # Function to run command prompt
 run_prompt() {
-    read -s -r cmd
-    printf "%s\n" "$cmd"  # Imprime o comando depois de digitado
+    read -r cmd
     execute_command "$cmd"
     print_prompt
 }
