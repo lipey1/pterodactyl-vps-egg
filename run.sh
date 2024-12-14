@@ -158,11 +158,26 @@ execute_command() {
             return 0
         ;;
         *)
-            # Execute command and capture its exit status
-            eval "$cmd"
-            exit_status=$?
-            if [ $exit_status -ne 0 ] && ! command -v "$cmd" >/dev/null 2>&1; then
-                printf "${RED}%s: Command not found${NC}\n" "$cmd"
+            # Check if command might change directory
+            if [[ "$cmd" == *"cd "* ]] || [[ "$cmd" == *"pushd"* ]] || [[ "$cmd" == *"popd"* ]]; then
+                eval "$cmd" || {
+                    printf "${RED}Command failed: $cmd${NC}\n"
+                    print_prompt
+                    return 1
+                }
+                # If we ended up outside /home/container, go back
+                if [[ "$PWD" != "/home/container"* ]]; then
+                    cd /home/container
+                    printf "${RED}Access denied: Cannot navigate outside of /${NC}\n"
+                fi
+            else
+                # Execute command
+                if ! eval "$cmd" 2> >(grep -v "command not found" >&2); then
+                    # Se o comando falhou, verifica se é porque não existe
+                    if ! command -v "${cmd%% *}" >/dev/null 2>&1; then
+                        printf "${RED}%s: Command not found${NC}\n" "${cmd%% *}"
+                    fi
+                fi
             fi
             print_prompt
             return 0
