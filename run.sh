@@ -158,25 +158,11 @@ execute_command() {
             return 0
         ;;
         *)
-            # Check if command might change directory
-            if [[ "$cmd" == *"cd "* ]] || [[ "$cmd" == *"pushd"* ]] || [[ "$cmd" == *"popd"* ]]; then
-                eval "$cmd" 2>/dev/null || {
-                    printf "${RED}Command failed: $cmd${NC}\n"
-                    print_prompt
-                    return 1
-                }
-                # If we ended up outside /home/container, go back
-                if [[ "$PWD" != "/home/container"* ]]; then
-                    cd /home/container
-                    printf "${RED}Access denied: Cannot navigate outside of /${NC}\n"
-                fi
-            else
-                # Execute command and capture its exit status
-                eval "$cmd" 2>/dev/null
-                exit_status=$?
-                if [ $exit_status -ne 0 ] && ! command -v "$cmd" >/dev/null 2>&1; then
-                    printf "${RED}%s: Command not found${NC}\n" "$cmd"
-                fi
+            # Execute command and capture its exit status
+            eval "$cmd"
+            exit_status=$?
+            if [ $exit_status -ne 0 ] && ! command -v "$cmd" >/dev/null 2>&1; then
+                printf "${RED}%s: Command not found${NC}\n" "$cmd"
             fi
             print_prompt
             return 0
