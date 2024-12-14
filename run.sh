@@ -50,7 +50,7 @@ print_instructions() {
 
 # Function to print prompt
 print_prompt() {
-    printf "root@${GREEN}:# "
+    printf "\n${GREEN}root@${HOSTNAME}${NC}:${RED}$(get_formatted_dir)${NC}# "
 }
 
 # Function to save command to history
@@ -181,6 +181,7 @@ execute_command() {
 run_prompt() {
     read -r cmd
     execute_command "$cmd"
+    print_prompt
 }
 
 # Create history file if it doesn't exist
