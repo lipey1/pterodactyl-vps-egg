@@ -46,6 +46,8 @@ print_banner() {
 
 print_instructions() {
     printf "${YELLOW}Type 'help' to view a list of available custom commands.${NC}\n\n"
+    printf "${GREEN}root@${HOSTNAME}${NC}:${RED}$(get_formatted_dir)${NC}# "
+    exec 1>&1  # Força o flush do buffer
 }
 
 # Function to print prompt
@@ -107,9 +109,6 @@ execute_command() {
     
     # Save command to history
     save_to_history "$cmd"
-    
-    # Print prompt before executing command
-    print_prompt
     
     # Handle special commands
     case "$cmd" in
