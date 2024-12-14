@@ -175,8 +175,21 @@ execute_command() {
                 if [[ "$cmd" == "apt-get"* || "$cmd" == "apt"* || "$cmd" == "dpkg"* ]]; then
                     # Remove any existing lock files
                     rm -f /var/lib/dpkg/lock* /var/lib/apt/lists/lock* /var/cache/apt/archives/lock* 2>/dev/null || true
-                    # Set proper permissions
-                    chmod -R 777 /var/lib/dpkg /var/lib/apt /var/cache/apt 2>/dev/null || true
+                    
+                    # Create necessary directories
+                    mkdir -p /var/lib/dpkg/updates /var/lib/apt/lists/partial /var/cache/apt/archives/partial 2>/dev/null || true
+                    
+                    # Set proper permissions recursively
+                    find /var/lib/dpkg /var/lib/apt /var/cache/apt -type d -exec chmod 0755 {} + 2>/dev/null || true
+                    find /var/lib/dpkg /var/lib/apt /var/cache/apt -type f -exec chmod 0644 {} + 2>/dev/null || true
+                    
+                    # Ensure specific files are writable
+                    touch /var/lib/dpkg/status /var/lib/dpkg/available 2>/dev/null || true
+                    chmod 0644 /var/lib/dpkg/status /var/lib/dpkg/available 2>/dev/null || true
+                    
+                    # Create and set permissions for lock files
+                    touch /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock 2>/dev/null || true
+                    chmod 0666 /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock 2>/dev/null || true
                 fi
                 
                 # Execute command
