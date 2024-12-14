@@ -46,7 +46,7 @@ print_banner() {
 
 print_instructions() {
     printf "${YELLOW}Type 'help' to view a list of available custom commands.${NC}\n\n"
-    printf "${GREEN}root@${HOSTNAME}${NC}:${RED}/${NC}# "
+    printf "${GREEN}root@${HOSTNAME}d:${RED}/d# "
 }
 
 # Function to print prompt
