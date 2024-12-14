@@ -98,7 +98,7 @@ print_help_message() {
     printf "${PURPLE}│                      ${YELLOW}reinstall${GREEN}          - Reinstall the server.                ${PURPLE}│${NC}\n"
     printf "${PURPLE}│                      ${YELLOW}help${GREEN}               - Display this help message.           ${PURPLE}│${NC}\n"
     printf "${PURPLE}│                                                                                │${NC}\n"
-    printf "${PURPLE}╰───��────────────────────────────────────────────────────────────────────────────╯${NC}\n"
+    printf "${PURPLE}╰────────────────────────────────────────────────────────────────────────────────╯${NC}\n"
 }
 
 # Function to handle command execution
@@ -130,6 +130,11 @@ execute_command() {
         ;;
         "help")
             print_help_message
+            print_prompt
+            return 0
+        ;;
+        "sudo"*|"su"*)
+            printf "${RED}sudo command is not available. You are already running as root.${NC}\n"
             print_prompt
             return 0
         ;;
