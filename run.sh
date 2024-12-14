@@ -46,6 +46,7 @@ print_banner() {
 
 print_instructions() {
     printf "${YELLOW}Type 'help' to view a list of available custom commands.${NC}\n\n"
+    print_prompt
 }
 
 # Function to print prompt
@@ -192,9 +193,6 @@ trap cleanup INT TERM
 
 # Print initial banner
 print_banner
-
-# Print the initial instructions 
-print_instructions
 
 # Print initial command
 print_prompt
