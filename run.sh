@@ -8,7 +8,7 @@ YELLOW='\033[0;33m'
 NC='\033[0m'
 
 # Configuration
-HOSTNAME="MyVPS"
+HOSTNAME="VPS"
 HISTORY_FILE="/home/container/.custom_shell_history"
 MAX_HISTORY=1000
 
@@ -98,7 +98,7 @@ print_help_message() {
     printf "${PURPLE}│                      ${YELLOW}reinstall${GREEN}          - Reinstall the server.                ${PURPLE}│${NC}\n"
     printf "${PURPLE}│                      ${YELLOW}help${GREEN}               - Display this help message.           ${PURPLE}│${NC}\n"
     printf "${PURPLE}│                                                                                │${NC}\n"
-    printf "${PURPLE}╰───��────────────────────────────────────────────────────────────────────────────╯${NC}\n"
+    printf "${PURPLE}╰────────────────────────────────────────────────────────────────────────────────╯${NC}\n"
 }
 
 # Function to handle command execution
@@ -142,11 +142,21 @@ execute_command() {
                 # Check if we're still in /home/container
                 if [[ "$PWD" != "/home/container"* ]]; then
                     cd /home/container
-                    printf "${RED}Access denied: Cannot navigate outside of /home/container${NC}\n"
+                    printf "${RED}Access denied: Cannot navigate outside of /${NC}\n"
                 fi
             else
                 printf "${RED}Directory not found: $target_dir${NC}\n"
             fi
+            print_prompt
+            return 0
+        ;;
+        "sudo"*)
+            printf "${RED}sudo command is not available. You are already running as root.${NC}\n"
+            print_prompt
+            return 0
+        ;;
+        "sudo su"*)
+            printf "${RED}sudo command is not available. You are already running as root.${NC}\n"
             print_prompt
             return 0
         ;;
@@ -161,7 +171,7 @@ execute_command() {
                 # If we ended up outside /home/container, go back
                 if [[ "$PWD" != "/home/container"* ]]; then
                     cd /home/container
-                    printf "${RED}Access denied: Cannot navigate outside of /home/container${NC}\n"
+                    printf "${RED}Access denied: Cannot navigate outside of /${NC}\n"
                 fi
             else
                 eval "$cmd"
