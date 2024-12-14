@@ -171,7 +171,7 @@ execute_command() {
                 fi
             else
                 # Execute command and capture its exit status
-                eval "$cmd"
+                eval "$cmd" 2>/dev/null
                 exit_status=$?
                 if [ $exit_status -ne 0 ] && ! command -v "$cmd" >/dev/null 2>&1; then
                     printf "${RED}%s: Command not found${NC}\n" "$cmd"
