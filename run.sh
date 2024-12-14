@@ -50,8 +50,7 @@ print_instructions() {
 
 # Function to print prompt
 print_prompt() {
-    local current_dir=$(get_formatted_dir)
-    printf "root@VPS:${current_dir}# "
+    printf "root@${GREEN}:# "
 }
 
 # Function to save command to history
@@ -99,7 +98,7 @@ print_help_message() {
     printf "${PURPLE}│                      ${YELLOW}reinstall${GREEN}          - Reinstall the server.                ${PURPLE}│${NC}\n"
     printf "${PURPLE}│                      ${YELLOW}help${GREEN}               - Display this help message.           ${PURPLE}│${NC}\n"
     printf "${PURPLE}│                                                                                │${NC}\n"
-    printf "${PURPLE}╰────────────────────────────────────────────────────────────────────────────────╯${NC}\n"
+    printf "${PURPLE}╰───��────────────────────────────────────────────────────────────────────────────╯${NC}\n"
 }
 
 # Function to handle command execution
@@ -134,11 +133,6 @@ execute_command() {
             print_prompt
             return 0
         ;;
-        "sudo"*|"su"*)
-            printf "${RED}sudo command is not available. You are already running as root.${NC}\n"
-            print_prompt
-            return 0
-        ;;
         "cd "*)
             # Extract the target directory
             target_dir="${cmd#cd }"
@@ -157,9 +151,21 @@ execute_command() {
             return 0
         ;;
         *)
-            # Execute the command
-            eval "$cmd"
-            # Print the prompt with current directory after command execution
+            # Check if command might change directory
+            if [[ "$cmd" == *"cd "* ]] || [[ "$cmd" == *"pushd"* ]] || [[ "$cmd" == *"popd"* ]]; then
+                eval "$cmd" 2>/dev/null || {
+                    printf "${RED}Command failed: $cmd${NC}\n"
+                    print_prompt
+                    return 1
+                }
+                # If we ended up outside /home/container, go back
+                if [[ "$PWD" != "/home/container"* ]]; then
+                    cd /home/container
+                    printf "${RED}Access denied: Cannot navigate outside of /${NC}\n"
+                fi
+            else
+                eval "$cmd"
+            fi
             print_prompt
             return 0
         ;;
