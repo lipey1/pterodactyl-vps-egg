@@ -50,7 +50,8 @@ print_instructions() {
 
 # Function to print prompt
 print_prompt() {
-    printf "root@MyVPS:# "
+    local current_dir=$(get_formatted_dir)
+    printf "root@VPS:${current_dir}# "
 }
 
 # Function to save command to history
@@ -133,6 +134,11 @@ execute_command() {
             print_prompt
             return 0
         ;;
+        "sudo"*|"su"*)
+            printf "${RED}sudo command is not available. You are already running as root.${NC}\n"
+            print_prompt
+            return 0
+        ;;
         "cd "*)
             # Extract the target directory
             target_dir="${cmd#cd }"
@@ -150,32 +156,10 @@ execute_command() {
             print_prompt
             return 0
         ;;
-        "sudo"*)
-            printf "${RED}sudo command is not available. You are already running as root.${NC}\n"
-            print_prompt
-            return 0
-        ;;
-        "sudo su"*)
-            printf "${RED}sudo command is not available. You are already running as root.${NC}\n"
-            print_prompt
-            return 0
-        ;;
         *)
-            # Check if command might change directory
-            if [[ "$cmd" == *"cd "* ]] || [[ "$cmd" == *"pushd"* ]] || [[ "$cmd" == *"popd"* ]]; then
-                eval "$cmd" 2>/dev/null || {
-                    printf "${RED}Command failed: $cmd${NC}\n"
-                    print_prompt
-                    return 1
-                }
-                # If we ended up outside /home/container, go back
-                if [[ "$PWD" != "/home/container"* ]]; then
-                    cd /home/container
-                    printf "${RED}Access denied: Cannot navigate outside of /${NC}\n"
-                fi
-            else
-                eval "$cmd"
-            fi
+            # Execute the command
+            eval "$cmd"
+            # Print the prompt with current directory after command execution
             print_prompt
             return 0
         ;;
