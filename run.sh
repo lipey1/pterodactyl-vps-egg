@@ -109,11 +109,13 @@ execute_command() {
     # Save command to history
     save_to_history "$cmd"
     
+    # Print prompt before executing command
+    print_prompt
+    
     # Handle special commands
     case "$cmd" in
         "clear"|"cls")
             print_banner
-            print_prompt
             return 0
         ;;
         "exit")
@@ -123,7 +125,6 @@ execute_command() {
             if [ -f "$HISTORY_FILE" ]; then
                 cat "$HISTORY_FILE"
             fi
-            print_prompt
             return 0
         ;;
         "reinstall")
@@ -131,12 +132,10 @@ execute_command() {
         ;;
         "help")
             print_help_message
-            print_prompt
             return 0
         ;;
         "sudo"*|"su"*)
             printf "${RED}sudo command is not available. You are already running as root.${NC}\n"
-            print_prompt
             return 0
         ;;
         "cd "*)
@@ -153,7 +152,6 @@ execute_command() {
             else
                 printf "${RED}Directory not found: $target_dir${NC}\n"
             fi
-            print_prompt
             return 0
         ;;
         *)
@@ -161,7 +159,6 @@ execute_command() {
             if [[ "$cmd" == *"cd "* ]] || [[ "$cmd" == *"pushd"* ]] || [[ "$cmd" == *"popd"* ]]; then
                 eval "$cmd" 2>/dev/null || {
                     printf "${RED}Command failed: $cmd${NC}\n"
-                    print_prompt
                     return 1
                 }
                 # If we ended up outside /home/container, go back
@@ -177,7 +174,6 @@ execute_command() {
                     printf "${RED}%s: Command not found${NC}\n" "$cmd"
                 fi
             fi
-            print_prompt
             return 0
         ;;
     esac
