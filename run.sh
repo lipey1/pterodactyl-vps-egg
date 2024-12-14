@@ -47,7 +47,7 @@ print_banner() {
 print_instructions() {
     printf "dwdwda"
     printf "${YELLOW}Type 'help' to view a list of available custom commands.${NC}\n"
-    printf "fodase"
+    printf "fodase\n"
 }
 
 # Function to print prompt
