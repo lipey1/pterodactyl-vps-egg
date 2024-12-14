@@ -170,7 +170,10 @@ execute_command() {
                     printf "${RED}Access denied: Cannot navigate outside of /${NC}\n"
                 fi
             else
-                if ! eval "$cmd" 2>/dev/null; then
+                # Execute command and capture its exit status
+                eval "$cmd"
+                exit_status=$?
+                if [ $exit_status -ne 0 ] && ! command -v "$cmd" >/dev/null 2>&1; then
                     printf "${RED}%s: Command not found${NC}\n" "$cmd"
                 fi
             fi
