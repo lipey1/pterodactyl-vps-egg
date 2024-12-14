@@ -46,7 +46,7 @@ print_banner() {
 
 print_instructions() {
     printf "${YELLOW}Type 'help' to view a list of available custom commands.${NC}\n\n"
-    printf "5root@22:fff/d# "
+        printf "\n${GREEN}root@${NC}:${RED}${NC}# "
 }
 
 # Function to print prompt
@@ -194,8 +194,8 @@ trap cleanup INT TERM
 # Print initial banner
 print_banner
 
-# Print initial command
-print_prompt
+# Print the initial instructions 
+print_instructions
 
 # Ensure we start in /home/container
 cd /home/container
