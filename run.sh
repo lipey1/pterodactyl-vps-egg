@@ -171,6 +171,14 @@ execute_command() {
                     printf "${RED}Access denied: Cannot navigate outside of /${NC}\n"
                 fi
             else
+                # Execute command with proper permissions
+                if [[ "$cmd" == "apt-get"* || "$cmd" == "apt"* || "$cmd" == "dpkg"* ]]; then
+                    # Remove any existing lock files
+                    rm -f /var/lib/dpkg/lock* /var/lib/apt/lists/lock* /var/cache/apt/archives/lock* 2>/dev/null || true
+                    # Set proper permissions
+                    chmod -R 777 /var/lib/dpkg /var/lib/apt /var/cache/apt 2>/dev/null || true
+                fi
+                
                 # Execute command
                 if ! eval "$cmd" 2> >(grep -v "command not found" >&2); then
                     # Se o comando falhou, verifica se é porque não existe
