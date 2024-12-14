@@ -45,9 +45,8 @@ print_banner() {
 }
 
 print_instructions() {
-    printf "dwdwda"
-    printf "${YELLOW}Type 'help' to view a list of available custom commands.${NC}\n"
-    printf "fodase\n"
+    printf "${YELLOW}Type 'help' to view a list of available custom commands.${NC}\n\n"
+    printf "${GREEN}root@${HOSTNAME}${NC}:${RED}$(get_formatted_dir)${NC}# \n"
 }
 
 # Function to print prompt
@@ -171,7 +170,9 @@ execute_command() {
                     printf "${RED}Access denied: Cannot navigate outside of /${NC}\n"
                 fi
             else
-                eval "$cmd"
+                if ! eval "$cmd" 2>/dev/null; then
+                    printf "${RED}%s: Command not found${NC}\n" "$cmd"
+                fi
             fi
             print_prompt
             return 0
