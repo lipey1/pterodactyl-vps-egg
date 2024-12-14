@@ -243,6 +243,32 @@ post_install_config() {
     esac
 }
 
+# Function to set correct permissions
+set_permissions() {
+    local distro="$1"
+    
+    log "INFO" "Setting up correct permissions..." "GREEN"
+    
+    # Set permissions for package management
+    chmod 755 "$ROOTFS_DIR/var/lib/dpkg" 2>/dev/null || true
+    chmod 644 "$ROOTFS_DIR/var/lib/dpkg/status" 2>/dev/null || true
+    chmod 644 "$ROOTFS_DIR/var/lib/dpkg/available" 2>/dev/null || true
+    chmod -R 755 "$ROOTFS_DIR/var/lib/apt" 2>/dev/null || true
+    chmod -R 755 "$ROOTFS_DIR/var/cache/apt" 2>/dev/null || true
+    chmod 755 "$ROOTFS_DIR/var/lib/dpkg/lock-frontend" 2>/dev/null || true
+    chmod 755 "$ROOTFS_DIR/var/lib/dpkg/lock" 2>/dev/null || true
+    
+    # Create required directories if they don't exist
+    mkdir -p "$ROOTFS_DIR/var/lib/dpkg/updates" 2>/dev/null || true
+    mkdir -p "$ROOTFS_DIR/var/lib/apt/lists/partial" 2>/dev/null || true
+    mkdir -p "$ROOTFS_DIR/var/cache/apt/archives/partial" 2>/dev/null || true
+    
+    # Set permissions for created directories
+    chmod 755 "$ROOTFS_DIR/var/lib/dpkg/updates" 2>/dev/null || true
+    chmod 755 "$ROOTFS_DIR/var/lib/apt/lists/partial" 2>/dev/null || true
+    chmod 755 "$ROOTFS_DIR/var/cache/apt/archives/partial" 2>/dev/null || true
+}
+
 # Main menu display
 display_menu() {
     printf "\033c"
@@ -353,3 +379,10 @@ chmod +x "$ROOTFS_DIR/run.sh"
 
 # Trap for cleanup on script exit
 trap cleanup EXIT
+
+# Antes do final do script, após extrair o rootfs, adicione:
+case "$selection" in
+    1|2|10|14|19) # Debian, Ubuntu, Kali, Devuan, Linux Mint
+        set_permissions "debian"
+    ;;
+esac
