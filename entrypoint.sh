@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Ensure we're running as root
+if [ "$(id -u)" != "0" ]; then
+    exec sudo -u root "$0" "$@"
+fi
+
 # Sleep for 2 seconds to ensure container is ready
 sleep 2
 
