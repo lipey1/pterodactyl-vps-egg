@@ -103,7 +103,24 @@ print_help_message() {
     printf "${PURPLE}╰────────────────────────────────────────────────────────────────────────────────╯${NC}\n"
 }
 
-# Function to handle command execution
+# Function to fix package management permissions
+fix_permissions() {
+    # Remove any existing locks
+    rm -f /var/lib/dpkg/lock* /var/lib/apt/lists/lock* /var/cache/apt/archives/lock* 2>/dev/null || true
+    
+    # Set proper permissions for package management directories
+    chmod -R 777 /var/lib/dpkg /var/lib/apt /var/cache/apt 2>/dev/null || true
+    
+    # Create and set permissions for key directories
+    mkdir -p /var/lib/dpkg/updates /var/lib/apt/lists/partial /var/cache/apt/archives/partial 2>/dev/null || true
+    chmod -R 777 /var/lib/dpkg/updates /var/lib/apt/lists/partial /var/cache/apt/archives/partial 2>/dev/null || true
+    
+    # Ensure specific files are writable
+    touch /var/lib/dpkg/status /var/lib/dpkg/available 2>/dev/null || true
+    chmod 666 /var/lib/dpkg/status /var/lib/dpkg/available 2>/dev/null || true
+}
+
+# Function to execute command with proper permissions
 execute_command() {
     cmd="$1"
     
@@ -158,46 +175,15 @@ execute_command() {
             return 0
         ;;
         *)
-            # Check if command might change directory
-            if [[ "$cmd" == *"cd "* ]] || [[ "$cmd" == *"pushd"* ]] || [[ "$cmd" == *"popd"* ]]; then
-                eval "$cmd" || {
-                    printf "${RED}Command failed: $cmd${NC}\n"
-                    print_prompt
-                    return 1
-                }
-                # If we ended up outside /home/container, go back
-                if [[ "$PWD" != "/home/container"* ]]; then
-                    cd /home/container
-                    printf "${RED}Access denied: Cannot navigate outside of /${NC}\n"
-                fi
-            else
-                # Execute command with proper permissions
-                if [[ "$cmd" == "apt-get"* || "$cmd" == "apt"* || "$cmd" == "dpkg"* ]]; then
-                    # Remove any existing lock files
-                    rm -f /var/lib/dpkg/lock* /var/lib/apt/lists/lock* /var/cache/apt/archives/lock* 2>/dev/null || true
-                    
-                    # Create necessary directories
-                    mkdir -p /var/lib/dpkg/updates /var/lib/apt/lists/partial /var/cache/apt/archives/partial 2>/dev/null || true
-                    
-                    # Set proper permissions recursively
-                    find /var/lib/dpkg /var/lib/apt /var/cache/apt -type d -exec chmod 0755 {} + 2>/dev/null || true
-                    find /var/lib/dpkg /var/lib/apt /var/cache/apt -type f -exec chmod 0644 {} + 2>/dev/null || true
-                    
-                    # Ensure specific files are writable
-                    touch /var/lib/dpkg/status /var/lib/dpkg/available 2>/dev/null || true
-                    chmod 0644 /var/lib/dpkg/status /var/lib/dpkg/available 2>/dev/null || true
-                    
-                    # Create and set permissions for lock files
-                    touch /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock 2>/dev/null || true
-                    chmod 0666 /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock 2>/dev/null || true
-                fi
-                
-                # Execute command
-                if ! eval "$cmd" 2> >(grep -v "command not found" >&2); then
-                    # Se o comando falhou, verifica se é porque não existe
-                    if ! command -v "${cmd%% *}" >/dev/null 2>&1; then
-                        printf "${RED}%s: Command not found${NC}\n" "${cmd%% *}"
-                    fi
+            # Fix permissions before package management commands
+            if [[ "$cmd" == "apt"* || "$cmd" == "apt-get"* || "$cmd" == "dpkg"* ]]; then
+                fix_permissions
+            fi
+            
+            # Execute command
+            if ! eval "$cmd" 2> >(grep -v "command not found" >&2); then
+                if ! command -v "${cmd%% *}" >/dev/null 2>&1; then
+                    printf "${RED}%s: Command not found${NC}\n" "${cmd%% *}"
                 fi
             fi
             print_prompt
