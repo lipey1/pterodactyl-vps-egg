@@ -28,6 +28,9 @@ exec_proot() {
     --rootfs="${HOME}" \
     -0 -w "${HOME}" \
     -b /dev -b /sys -b /proc -b /etc/resolv.conf \
+    -b /etc/passwd -b /etc/group \
+    --sysvipc \
+    -i 0:0 \
     /bin/sh "/run.sh"
 }
 
