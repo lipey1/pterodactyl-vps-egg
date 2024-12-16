@@ -109,15 +109,18 @@ fix_permissions() {
     rm -f /var/lib/dpkg/lock* /var/lib/apt/lists/lock* /var/cache/apt/archives/lock* 2>/dev/null || true
     
     # Set proper permissions for package management directories
-    chmod -R 777 /var/lib/dpkg /var/lib/apt /var/cache/apt 2>/dev/null || true
+    chown -R root:root /var/lib/dpkg /var/lib/apt /var/cache/apt 2>/dev/null || true
+    chmod -R 755 /var/lib/dpkg /var/lib/apt /var/cache/apt 2>/dev/null || true
     
     # Create and set permissions for key directories
     mkdir -p /var/lib/dpkg/updates /var/lib/apt/lists/partial /var/cache/apt/archives/partial 2>/dev/null || true
-    chmod -R 777 /var/lib/dpkg/updates /var/lib/apt/lists/partial /var/cache/apt/archives/partial 2>/dev/null || true
+    chown -R root:root /var/lib/dpkg/updates /var/lib/apt/lists/partial /var/cache/apt/archives/partial 2>/dev/null || true
+    chmod -R 755 /var/lib/dpkg/updates /var/lib/apt/lists/partial /var/cache/apt/archives/partial 2>/dev/null || true
     
     # Ensure specific files are writable
     touch /var/lib/dpkg/status /var/lib/dpkg/available 2>/dev/null || true
-    chmod 666 /var/lib/dpkg/status /var/lib/dpkg/available 2>/dev/null || true
+    chown root:root /var/lib/dpkg/status /var/lib/dpkg/available 2>/dev/null || true
+    chmod 644 /var/lib/dpkg/status /var/lib/dpkg/available 2>/dev/null || true
 }
 
 # Function to execute command with proper permissions
@@ -180,7 +183,7 @@ execute_command() {
                 fix_permissions
             fi
             
-            # Execute command
+            # Execute command with proper permissions
             if ! eval "$cmd" 2> >(grep -v "command not found" >&2); then
                 if ! command -v "${cmd%% *}" >/dev/null 2>&1; then
                     printf "${RED}%s: Command not found${NC}\n" "${cmd%% *}"

@@ -10,6 +10,7 @@ export INTERNAL_IP=$(ip route get 1 | awk '{print $NF;exit}')
 
 # Fix permissions for package management
 fix_permissions() {
+    chown -R root:root /var/lib/dpkg /var/lib/apt /var/cache/apt 2>/dev/null || true
     chmod 755 /var/lib/dpkg 2>/dev/null || true
     chmod 644 /var/lib/dpkg/status 2>/dev/null || true
     chmod 644 /var/lib/dpkg/available 2>/dev/null || true
