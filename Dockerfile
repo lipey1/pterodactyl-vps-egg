@@ -28,7 +28,13 @@ RUN update-locale lang=en_US.UTF-8 && \
 RUN mkdir -p /home/container && \
     chmod -R 777 /home/container && \
     mkdir -p /etc/apt/apt.conf.d && \
-    chmod -R 777 /etc/apt
+    chmod -R 777 /etc/apt && \
+    mkdir -p /var/lib/apt/lists/partial \
+             /var/cache/apt/archives/partial \
+             /var/lib/dpkg && \
+    chmod -R 777 /var/lib/apt \
+                 /var/cache/apt \
+                 /var/lib/dpkg
 
 # Set up working directory
 WORKDIR /home/container
@@ -49,6 +55,8 @@ RUN echo 'Dir::Cache "/home/container/.apt/cache/";' > /etc/apt/apt.conf.d/99cus
     echo 'Dir::State::status "/home/container/.apt/status";' >> /etc/apt/apt.conf.d/99custom && \
     echo 'Dir::State "/home/container/.apt/";' >> /etc/apt/apt.conf.d/99custom && \
     echo 'Dir::Cache::archives "/home/container/.cache/apt/archives/";' >> /etc/apt/apt.conf.d/99custom && \
+    echo 'Dir::Cache::pkgcache "";' >> /etc/apt/apt.conf.d/99custom && \
+    echo 'Dir::Cache::srcpkgcache "";' >> /etc/apt/apt.conf.d/99custom && \
     echo 'APT::Get::List-Cleanup "0";' >> /etc/apt/apt.conf.d/99custom && \
     echo 'APT::Keep-Downloaded-Packages "true";' >> /etc/apt/apt.conf.d/99custom && \
     echo 'Acquire::AllowInsecureRepositories "true";' >> /etc/apt/apt.conf.d/99custom

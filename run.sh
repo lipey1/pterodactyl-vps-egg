@@ -113,7 +113,17 @@ fix_permissions() {
              /home/container/.debconf \
              /home/container/.cache/apt/archives/partial
     chmod -R 777 /home/container/.apt /home/container/.dpkg /home/container/.debconf /home/container/.cache
- 
+
+    # Create and fix permissions for system directories that APT might try to use
+    mkdir -p /var/lib/apt/lists/partial \
+             /var/cache/apt/archives/partial \
+             /var/lib/dpkg
+    chmod -R 777 /var/lib/apt \
+                 /var/cache/apt \
+                 /var/lib/dpkg \
+                 /var/lib/apt/lists/partial \
+                 /var/cache/apt/archives/partial
+
     # Initialize status file if it doesn't exist
     if [ ! -f /home/container/.apt/status ]; then
         touch /home/container/.apt/status
@@ -130,7 +140,10 @@ fix_permissions() {
     rm -f /home/container/.apt/lists/lock* \
           /home/container/.apt/cache/archives/lock* \
           /home/container/.dpkg/lock* \
-          /home/container/.cache/apt/archives/lock* 2>/dev/null || true
+          /home/container/.cache/apt/archives/lock* \
+          /var/lib/dpkg/lock* \
+          /var/lib/apt/lists/lock* \
+          /var/cache/apt/archives/lock* 2>/dev/null || true
  
     # Set environment variables for package management
     export DPKG_ADMINDIR=/home/container/.dpkg
@@ -139,6 +152,7 @@ fix_permissions() {
     export DEBIAN_FRONTEND=noninteractive
     export HOME=/home/container
     export XDG_CACHE_HOME=/home/container/.cache
+    export APT_LISTCHANGES_FRONTEND=none
 }
 
 # Function to execute command with proper permissions
@@ -206,6 +220,8 @@ execute_command() {
                      APT_CONFIG=/etc/apt/apt.conf.d/99custom \
                      HOME=/home/container \
                      XDG_CACHE_HOME=/home/container/.cache \
+                     APT_LISTCHANGES_FRONTEND=none \
+                     TMPDIR=/home/container/.apt/tmp \
                      $cmd"
             fi
             
