@@ -105,14 +105,28 @@ print_help_message() {
 
 # Function to fix package management permissions
 fix_permissions() {
+    # Ensure root filesystem is writable
+    mount -o remount,rw / 2>/dev/null || true
+    
+    # Create and ensure key directories are writable
+    mkdir -p /var/lib/dpkg /var/lib/apt /var/cache/apt \
+             /var/lib/dpkg/updates /var/lib/apt/lists/partial \
+             /var/cache/apt/archives/partial \
+             /var/log/apt \
+             /var/log/dpkg \
+             /usr/lib/x86_64-linux-gnu \
+             /usr/share/apport \
+             /etc/python3.12 \
+             /var/lib/python \
+             /etc/X11 2>/dev/null || true
+    
+    # Set permissions
+    chmod -R 777 /var/lib/dpkg /var/lib/apt /var/cache/apt /var/log/apt /var/log/dpkg \
+                 /usr/lib/x86_64-linux-gnu /usr/share/apport /etc/python3.12 \
+                 /var/lib/python /etc/X11 2>/dev/null || true
+    
     # Remove any existing locks
     rm -f /var/lib/dpkg/lock* /var/lib/apt/lists/lock* /var/cache/apt/archives/lock* 2>/dev/null || true
-    
-    # Ensure directories are writable
-    mount -o remount,rw / 2>/dev/null || true
-    mount -o remount,rw /var/lib/apt 2>/dev/null || true
-    mount -o remount,rw /var/cache/apt 2>/dev/null || true
-    mount -o remount,rw /var/lib/dpkg 2>/dev/null || true
     
     # Set proper permissions for package management directories
     chown -R _apt:root /var/lib/apt/lists/partial 2>/dev/null || true
@@ -121,15 +135,18 @@ fix_permissions() {
     chown -R _apt:root /var/cache/apt/archives/partial 2>/dev/null || true
     chmod -R 700 /var/cache/apt/archives/partial 2>/dev/null || true
     
-    chmod -R 777 /var/lib/dpkg /var/lib/apt /var/cache/apt 2>/dev/null || true
-    
-    # Create and set permissions for key directories
-    mkdir -p /var/lib/dpkg/updates /var/lib/apt/lists/partial /var/cache/apt/archives/partial 2>/dev/null || true
-    chmod -R 777 /var/lib/dpkg/updates /var/lib/apt/lists/partial /var/cache/apt/archives/partial 2>/dev/null || true
-    
     # Ensure specific files are writable
     touch /var/lib/dpkg/status /var/lib/dpkg/available 2>/dev/null || true
     chmod 666 /var/lib/dpkg/status /var/lib/dpkg/available 2>/dev/null || true
+    
+    # Ensure log files are writable
+    touch /var/log/apt/term.log /var/log/apt/eipp.log.xz 2>/dev/null || true
+    chmod 666 /var/log/apt/term.log /var/log/apt/eipp.log.xz 2>/dev/null || true
+    
+    # Ensure debconf can write its files
+    mkdir -p /var/cache/debconf 2>/dev/null || true
+    touch /var/cache/debconf/passwords.dat 2>/dev/null || true
+    chmod 666 /var/cache/debconf/passwords.dat 2>/dev/null || true
 }
 
 # Function to execute command with proper permissions
