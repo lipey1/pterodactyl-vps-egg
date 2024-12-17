@@ -158,8 +158,18 @@ execute_command() {
             return 0
         ;;
         *)
-            # Execute command using proot
-            if ! proot -r / -w / -b /proc -b /dev -b /sys -0 /bin/sh -c "$cmd" 2> >(grep -v "command not found" >&2); then
+            # Execute command using proot with full root simulation
+            if ! proot -S . \
+                      -b /dev \
+                      -b /proc \
+                      -b /sys \
+                      -b /etc/resolv.conf \
+                      -w / \
+                      -r / \
+                      --link2symlink \
+                      --kill-on-exit \
+                      -0 \
+                      /bin/sh -c "$cmd" 2> >(grep -v "command not found" >&2); then
                 if ! command -v "${cmd%% *}" >/dev/null 2>&1; then
                     printf "${RED}%s: Command not found${NC}\n" "${cmd%% *}"
                 fi
