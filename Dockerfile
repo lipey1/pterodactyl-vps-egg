@@ -52,11 +52,12 @@ RUN echo 'Dir::Cache "/home/container/.apt/cache/";' > /etc/apt/apt.conf.d/99cus
     echo 'Dir::State::lists "/home/container/.apt/lists/";' >> /etc/apt/apt.conf.d/99custom && \
     echo 'Dir::Log "/home/container/.apt/log/";' >> /etc/apt/apt.conf.d/99custom && \
     echo 'Dir::State::extended_states "/home/container/.apt/extended_states";' >> /etc/apt/apt.conf.d/99custom && \
-    echo 'Dir::State::status "/home/container/.apt/status";' >> /etc/apt/apt.conf.d/99custom && \
+    echo 'Dir::State::status "/home/container/.var/lib/dpkg/status";' >> /etc/apt/apt.conf.d/99custom && \
     echo 'Dir::State "/home/container/.apt/";' >> /etc/apt/apt.conf.d/99custom && \
     echo 'Dir::Cache::archives "/home/container/.cache/apt/archives/";' >> /etc/apt/apt.conf.d/99custom && \
     echo 'Dir::Cache::pkgcache "";' >> /etc/apt/apt.conf.d/99custom && \
     echo 'Dir::Cache::srcpkgcache "";' >> /etc/apt/apt.conf.d/99custom && \
+    echo 'Dir::Etc::TrustedParts "/home/container/.apt/trusted.gpg.d/";' >> /etc/apt/apt.conf.d/99custom && \
     echo 'APT::Get::List-Cleanup "0";' >> /etc/apt/apt.conf.d/99custom && \
     echo 'APT::Keep-Downloaded-Packages "true";' >> /etc/apt/apt.conf.d/99custom && \
     echo 'Acquire::AllowInsecureRepositories "true";' >> /etc/apt/apt.conf.d/99custom
@@ -70,7 +71,9 @@ RUN mkdir -p /etc/dpkg/dpkg.cfg.d && \
     echo 'path-exclude=/usr/share/lintian/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
     echo 'path-exclude=/usr/share/linda/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
     echo 'force-unsafe-io' > /etc/dpkg/dpkg.cfg.d/02_unsafe-io && \
-    echo 'no-debsig' >> /etc/dpkg/dpkg.cfg.d/02_unsafe-io
+    echo 'no-debsig' >> /etc/dpkg/dpkg.cfg.d/02_unsafe-io && \
+    echo 'admindir /home/container/.var/lib/dpkg' > /etc/dpkg/dpkg.cfg.d/03_custom && \
+    echo 'root /home/container' >> /etc/dpkg/dpkg.cfg.d/03_custom
 
 # Ensure we run as root
 USER root

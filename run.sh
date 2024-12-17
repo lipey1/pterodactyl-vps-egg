@@ -106,53 +106,56 @@ print_help_message() {
 # Function to fix package management permissions
 fix_permissions() {
     # Create all necessary directories in /home/container/.apt
-    mkdir -p /home/container/.apt/{cache,lists,log,archives} \
+    mkdir -p /home/container/.apt/{cache,lists,log,archives,tmp} \
              /home/container/.apt/cache/archives/partial \
              /home/container/.apt/lists/partial \
              /home/container/.dpkg/{updates,info,alternatives,triggers} \
-             /home/container/.debconf \
-             /home/container/.cache/apt/archives/partial
-    chmod -R 777 /home/container/.apt /home/container/.dpkg /home/container/.debconf /home/container/.cache
+             /home/container/.debconf/passwords.dat \
+             /home/container/.cache/apt/archives/partial \
+             /home/container/.var/cache/debconf \
+             /home/container/.var/cache/debconf/tmp.ci \
+             /home/container/.var/lib/dpkg \
+             /home/container/.var/lib/dpkg/updates \
+             /home/container/.var/lib/dpkg/info
+    
+    chmod -R 777 /home/container/.apt \
+                 /home/container/.dpkg \
+                 /home/container/.debconf \
+                 /home/container/.cache \
+                 /home/container/.var
 
-    # Create and fix permissions for system directories that APT might try to use
-    mkdir -p /var/lib/apt/lists/partial \
-             /var/cache/apt/archives/partial \
-             /var/lib/dpkg
-    chmod -R 777 /var/lib/apt \
-                 /var/cache/apt \
-                 /var/lib/dpkg \
-                 /var/lib/apt/lists/partial \
-                 /var/cache/apt/archives/partial
+    # Initialize debconf password file if it doesn't exist
+    if [ ! -f /home/container/.debconf/passwords.dat ]; then
+        touch /home/container/.debconf/passwords.dat
+        chmod 600 /home/container/.debconf/passwords.dat
+    fi
 
-    # Initialize status file if it doesn't exist
-    if [ ! -f /home/container/.apt/status ]; then
-        touch /home/container/.apt/status
-        chmod 644 /home/container/.apt/status
+    # Initialize dpkg status file if it doesn't exist
+    if [ ! -f /home/container/.var/lib/dpkg/status ]; then
+        touch /home/container/.var/lib/dpkg/status
+        chmod 644 /home/container/.var/lib/dpkg/status
     fi
- 
-    # Initialize extended_states if it doesn't exist
-    if [ ! -f /home/container/.apt/extended_states ]; then
-        touch /home/container/.apt/extended_states
-        chmod 644 /home/container/.apt/extended_states
-    fi
- 
+
     # Remove any existing locks
     rm -f /home/container/.apt/lists/lock* \
           /home/container/.apt/cache/archives/lock* \
           /home/container/.dpkg/lock* \
           /home/container/.cache/apt/archives/lock* \
+          /home/container/.var/lib/dpkg/lock* \
           /var/lib/dpkg/lock* \
           /var/lib/apt/lists/lock* \
           /var/cache/apt/archives/lock* 2>/dev/null || true
  
     # Set environment variables for package management
-    export DPKG_ADMINDIR=/home/container/.dpkg
+    export DPKG_ADMINDIR=/home/container/.var/lib/dpkg
     export DEBCONF_ADMIN_DIR=/home/container/.debconf
     export APT_CONFIG=/etc/apt/apt.conf.d/99custom
     export DEBIAN_FRONTEND=noninteractive
     export HOME=/home/container
     export XDG_CACHE_HOME=/home/container/.cache
     export APT_LISTCHANGES_FRONTEND=none
+    export TMPDIR=/home/container/.apt/tmp
+    export DEBCONF_TMPDIR=/home/container/.var/cache/debconf/tmp.ci
 }
 
 # Function to execute command with proper permissions
@@ -215,14 +218,15 @@ execute_command() {
                 fix_permissions
                 # Execute with proper environment variables
                 cmd="env DEBIAN_FRONTEND=noninteractive \
-                     DPKG_ADMINDIR=/home/container/.dpkg \
+                     DPKG_ADMINDIR=/home/container/.var/lib/dpkg \
                      DEBCONF_ADMIN_DIR=/home/container/.debconf \
                      APT_CONFIG=/etc/apt/apt.conf.d/99custom \
                      HOME=/home/container \
                      XDG_CACHE_HOME=/home/container/.cache \
                      APT_LISTCHANGES_FRONTEND=none \
                      TMPDIR=/home/container/.apt/tmp \
-                     $cmd"
+                     DEBCONF_TMPDIR=/home/container/.var/cache/debconf/tmp.ci \
+                     fakeroot $cmd"
             fi
             
             # Execute command
