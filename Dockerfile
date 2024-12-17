@@ -19,7 +19,9 @@ RUN apt-get update && \
         fakeroot \
         apt-utils \
         cron \
-        dbus && \
+        dbus \
+        fakechroot \
+        libc6-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Configure locale
@@ -81,13 +83,6 @@ RUN mkdir -p /etc/dpkg/dpkg.cfg.d && \
     echo 'admindir /home/container/.var/lib/dpkg' > /etc/dpkg/dpkg.cfg.d/03_custom && \
     echo 'no-chroot' >> /etc/dpkg/dpkg.cfg.d/03_custom && \
     echo 'log /home/container/.var/log/dpkg' >> /etc/dpkg/dpkg.cfg.d/03_custom
-
-# Install additional required packages
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        fakechroot \
-        libc6-dev && \
-    rm -rf /var/lib/apt/lists/*
 
 # Create required system groups
 RUN for group in messagebus ssl-cert input audio dip plugdev; do \
