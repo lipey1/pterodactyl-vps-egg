@@ -116,8 +116,11 @@ fix_permissions() {
              /home/container/.var/cache/debconf/tmp.ci \
              /home/container/.var/lib/dpkg \
              /home/container/.var/lib/dpkg/updates \
-             /home/container/.var/lib/dpkg/info
-    
+             /home/container/.var/lib/dpkg/info \
+             /home/container/.var/lib/dpkg/statoverride \
+             /home/container/.var/log/dpkg \
+             /home/container/.var/log/apt
+
     chmod -R 777 /home/container/.apt \
                  /home/container/.dpkg \
                  /home/container/.debconf \
@@ -134,6 +137,17 @@ fix_permissions() {
     if [ ! -f /home/container/.var/lib/dpkg/status ]; then
         touch /home/container/.var/lib/dpkg/status
         chmod 644 /home/container/.var/lib/dpkg/status
+    fi
+
+    # Initialize statoverride file if it doesn't exist
+    if [ ! -f /home/container/.var/lib/dpkg/statoverride ]; then
+        touch /home/container/.var/lib/dpkg/statoverride
+        chmod 644 /home/container/.var/lib/dpkg/statoverride
+    fi
+
+    # Create required system groups if they don't exist
+    if ! grep -q "^crontab:" /etc/group; then
+        groupadd -r crontab
     fi
 
     # Remove any existing locks
@@ -156,6 +170,8 @@ fix_permissions() {
     export APT_LISTCHANGES_FRONTEND=none
     export TMPDIR=/home/container/.apt/tmp
     export DEBCONF_TMPDIR=/home/container/.var/cache/debconf/tmp.ci
+    export DPKG_LOG=/home/container/.var/log/dpkg/log
+    export APT_LOG=/home/container/.var/log/apt/log
 }
 
 # Function to execute command with proper permissions

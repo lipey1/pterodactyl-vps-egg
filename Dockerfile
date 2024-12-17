@@ -17,7 +17,8 @@ RUN apt-get update && \
         locales \
         adduser \
         fakeroot \
-        apt-utils && \
+        apt-utils \
+        cron && \
     rm -rf /var/lib/apt/lists/*
 
 # Configure locale
@@ -50,7 +51,7 @@ RUN chmod +x /entrypoint.sh /install.sh /run.sh
 # Create a special apt configuration to handle read-only filesystem
 RUN echo 'Dir::Cache "/home/container/.apt/cache/";' > /etc/apt/apt.conf.d/99custom && \
     echo 'Dir::State::lists "/home/container/.apt/lists/";' >> /etc/apt/apt.conf.d/99custom && \
-    echo 'Dir::Log "/home/container/.apt/log/";' >> /etc/apt/apt.conf.d/99custom && \
+    echo 'Dir::Log "/home/container/.var/log/apt/";' >> /etc/apt/apt.conf.d/99custom && \
     echo 'Dir::State::extended_states "/home/container/.apt/extended_states";' >> /etc/apt/apt.conf.d/99custom && \
     echo 'Dir::State::status "/home/container/.var/lib/dpkg/status";' >> /etc/apt/apt.conf.d/99custom && \
     echo 'Dir::State "/home/container/.apt/";' >> /etc/apt/apt.conf.d/99custom && \
@@ -58,6 +59,8 @@ RUN echo 'Dir::Cache "/home/container/.apt/cache/";' > /etc/apt/apt.conf.d/99cus
     echo 'Dir::Cache::pkgcache "";' >> /etc/apt/apt.conf.d/99custom && \
     echo 'Dir::Cache::srcpkgcache "";' >> /etc/apt/apt.conf.d/99custom && \
     echo 'Dir::Etc::TrustedParts "/home/container/.apt/trusted.gpg.d/";' >> /etc/apt/apt.conf.d/99custom && \
+    echo 'Dir::Log::Terminal "/home/container/.var/log/apt/term.log";' >> /etc/apt/apt.conf.d/99custom && \
+    echo 'Dir::Log::History "/home/container/.var/log/apt/history.log";' >> /etc/apt/apt.conf.d/99custom && \
     echo 'APT::Get::List-Cleanup "0";' >> /etc/apt/apt.conf.d/99custom && \
     echo 'APT::Keep-Downloaded-Packages "true";' >> /etc/apt/apt.conf.d/99custom && \
     echo 'Acquire::AllowInsecureRepositories "true";' >> /etc/apt/apt.conf.d/99custom
@@ -73,7 +76,8 @@ RUN mkdir -p /etc/dpkg/dpkg.cfg.d && \
     echo 'force-unsafe-io' > /etc/dpkg/dpkg.cfg.d/02_unsafe-io && \
     echo 'no-debsig' >> /etc/dpkg/dpkg.cfg.d/02_unsafe-io && \
     echo 'admindir /home/container/.var/lib/dpkg' > /etc/dpkg/dpkg.cfg.d/03_custom && \
-    echo 'root /home/container' >> /etc/dpkg/dpkg.cfg.d/03_custom
+    echo 'root /home/container' >> /etc/dpkg/dpkg.cfg.d/03_custom && \
+    echo 'log /home/container/.var/log/dpkg' >> /etc/dpkg/dpkg.cfg.d/03_custom
 
 # Ensure we run as root
 USER root
