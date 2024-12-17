@@ -127,44 +127,21 @@ fix_permissions() {
                  /home/container/.cache \
                  /home/container/.var
 
-    # Create required system groups if they don't exist
-    required_groups=("crontab" "messagebus" "ssl-cert" "input" "audio" "dip" "plugdev")
-    for group in "${required_groups[@]}"; do
-        if ! grep -q "^$group:" /etc/group; then
-            groupadd -r "$group" 2>/dev/null || true
-        fi
-    done
-
-    # Initialize debconf password file if it doesn't exist
-    if [ ! -f /home/container/.debconf/passwords.dat ]; then
-        touch /home/container/.debconf/passwords.dat
-        chmod 600 /home/container/.debconf/passwords.dat
-    fi
+    # Create symlinks for critical files
+    ln -sf /lib64 /home/container/lib64 2>/dev/null || true
+    ln -sf /lib /home/container/lib 2>/dev/null || true
+    ln -sf /usr/lib /home/container/usr/lib 2>/dev/null || true
+    ln -sf /etc/ld.so.cache /home/container/etc/ld.so.cache 2>/dev/null || true
+    ln -sf /etc/alternatives /home/container/etc/alternatives 2>/dev/null || true
 
     # Initialize dpkg status file if it doesn't exist
     if [ ! -f /home/container/.var/lib/dpkg/status ]; then
         touch /home/container/.var/lib/dpkg/status
         chmod 644 /home/container/.var/lib/dpkg/status
+        # Copy the base status file if it exists
+        cp /var/lib/dpkg/status /home/container/.var/lib/dpkg/status 2>/dev/null || true
     fi
 
-    # Initialize statoverride file if it doesn't exist
-    if [ ! -f /home/container/.var/lib/dpkg/statoverride ]; then
-        touch /home/container/.var/lib/dpkg/statoverride
-        # Clear any existing statoverrides and create a clean one
-        echo "" > /home/container/.var/lib/dpkg/statoverride
-        chmod 644 /home/container/.var/lib/dpkg/statoverride
-    fi
-
-    # Remove any existing locks
-    rm -f /home/container/.apt/lists/lock* \
-          /home/container/.apt/cache/archives/lock* \
-          /home/container/.dpkg/lock* \
-          /home/container/.cache/apt/archives/lock* \
-          /home/container/.var/lib/dpkg/lock* \
-          /var/lib/dpkg/lock* \
-          /var/lib/apt/lists/lock* \
-          /var/cache/apt/archives/lock* 2>/dev/null || true
- 
     # Set environment variables for package management
     export DPKG_ADMINDIR=/home/container/.var/lib/dpkg
     export DEBCONF_ADMIN_DIR=/home/container/.debconf
@@ -180,6 +157,8 @@ fix_permissions() {
     export DPKG_FORCE_UNSAFE_IO=1
     export DPKG_FORCE_CONFDEF=1
     export DPKG_FORCE_CONFOLD=1
+    export LD_LIBRARY_PATH=/lib:/usr/lib:/lib64:/usr/lib64
+    export FAKECHROOT_EXCLUDE_PATH=/dev:/proc:/sys
 }
 
 # Function to execute command with proper permissions
@@ -250,7 +229,9 @@ execute_command() {
                      APT_LISTCHANGES_FRONTEND=none \
                      TMPDIR=/home/container/.apt/tmp \
                      DEBCONF_TMPDIR=/home/container/.var/cache/debconf/tmp.ci \
-                     fakeroot $cmd"
+                     LD_LIBRARY_PATH=/lib:/usr/lib:/lib64:/usr/lib64 \
+                     FAKECHROOT_EXCLUDE_PATH=/dev:/proc:/sys \
+                     fakechroot fakeroot $cmd"
             fi
             
             # Execute command
