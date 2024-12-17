@@ -110,8 +110,9 @@ fix_permissions() {
              /home/container/.apt/cache/archives/partial \
              /home/container/.apt/lists/partial \
              /home/container/.dpkg/{updates,info,alternatives,triggers} \
-             /home/container/.debconf
-    chmod -R 777 /home/container/.apt /home/container/.dpkg /home/container/.debconf
+             /home/container/.debconf \
+             /home/container/.cache/apt/archives/partial
+    chmod -R 777 /home/container/.apt /home/container/.dpkg /home/container/.debconf /home/container/.cache
  
     # Initialize status file if it doesn't exist
     if [ ! -f /home/container/.apt/status ]; then
@@ -128,11 +129,16 @@ fix_permissions() {
     # Remove any existing locks
     rm -f /home/container/.apt/lists/lock* \
           /home/container/.apt/cache/archives/lock* \
-          /home/container/.dpkg/lock* 2>/dev/null || true
+          /home/container/.dpkg/lock* \
+          /home/container/.cache/apt/archives/lock* 2>/dev/null || true
  
     # Set environment variables for package management
     export DPKG_ADMINDIR=/home/container/.dpkg
     export DEBCONF_ADMIN_DIR=/home/container/.debconf
+    export APT_CONFIG=/etc/apt/apt.conf.d/99custom
+    export DEBIAN_FRONTEND=noninteractive
+    export HOME=/home/container
+    export XDG_CACHE_HOME=/home/container/.cache
 }
 
 # Function to execute command with proper permissions
@@ -198,6 +204,8 @@ execute_command() {
                      DPKG_ADMINDIR=/home/container/.dpkg \
                      DEBCONF_ADMIN_DIR=/home/container/.debconf \
                      APT_CONFIG=/etc/apt/apt.conf.d/99custom \
+                     HOME=/home/container \
+                     XDG_CACHE_HOME=/home/container/.cache \
                      $cmd"
             fi
             

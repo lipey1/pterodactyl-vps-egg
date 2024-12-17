@@ -47,15 +47,22 @@ RUN echo 'Dir::Cache "/home/container/.apt/cache/";' > /etc/apt/apt.conf.d/99cus
     echo 'Dir::Log "/home/container/.apt/log/";' >> /etc/apt/apt.conf.d/99custom && \
     echo 'Dir::State::extended_states "/home/container/.apt/extended_states";' >> /etc/apt/apt.conf.d/99custom && \
     echo 'Dir::State::status "/home/container/.apt/status";' >> /etc/apt/apt.conf.d/99custom && \
-    echo 'Dir::State "/home/container/.apt/";' >> /etc/apt/apt.conf.d/99custom
+    echo 'Dir::State "/home/container/.apt/";' >> /etc/apt/apt.conf.d/99custom && \
+    echo 'Dir::Cache::archives "/home/container/.cache/apt/archives/";' >> /etc/apt/apt.conf.d/99custom && \
+    echo 'APT::Get::List-Cleanup "0";' >> /etc/apt/apt.conf.d/99custom && \
+    echo 'APT::Keep-Downloaded-Packages "true";' >> /etc/apt/apt.conf.d/99custom && \
+    echo 'Acquire::AllowInsecureRepositories "true";' >> /etc/apt/apt.conf.d/99custom
 
 # Create dpkg configuration
-RUN echo 'path-exclude=/usr/share/doc/*' > /etc/dpkg/dpkg.cfg.d/01_nodoc && \
+RUN mkdir -p /etc/dpkg/dpkg.cfg.d && \
+    echo 'path-exclude=/usr/share/doc/*' > /etc/dpkg/dpkg.cfg.d/01_nodoc && \
     echo 'path-exclude=/usr/share/man/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
     echo 'path-exclude=/usr/share/groff/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
     echo 'path-exclude=/usr/share/info/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
     echo 'path-exclude=/usr/share/lintian/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
-    echo 'path-exclude=/usr/share/linda/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc
+    echo 'path-exclude=/usr/share/linda/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
+    echo 'force-unsafe-io' > /etc/dpkg/dpkg.cfg.d/02_unsafe-io && \
+    echo 'no-debsig' >> /etc/dpkg/dpkg.cfg.d/02_unsafe-io
 
 # Ensure we run as root
 USER root
