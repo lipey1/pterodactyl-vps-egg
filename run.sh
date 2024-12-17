@@ -127,6 +127,14 @@ fix_permissions() {
                  /home/container/.cache \
                  /home/container/.var
 
+    # Create required system groups if they don't exist
+    required_groups=("crontab" "messagebus" "ssl-cert" "input" "audio" "dip" "plugdev")
+    for group in "${required_groups[@]}"; do
+        if ! grep -q "^$group:" /etc/group; then
+            groupadd -r "$group" 2>/dev/null || true
+        fi
+    done
+
     # Initialize debconf password file if it doesn't exist
     if [ ! -f /home/container/.debconf/passwords.dat ]; then
         touch /home/container/.debconf/passwords.dat
@@ -142,12 +150,9 @@ fix_permissions() {
     # Initialize statoverride file if it doesn't exist
     if [ ! -f /home/container/.var/lib/dpkg/statoverride ]; then
         touch /home/container/.var/lib/dpkg/statoverride
+        # Clear any existing statoverrides and create a clean one
+        echo "" > /home/container/.var/lib/dpkg/statoverride
         chmod 644 /home/container/.var/lib/dpkg/statoverride
-    fi
-
-    # Create required system groups if they don't exist
-    if ! grep -q "^crontab:" /etc/group; then
-        groupadd -r crontab
     fi
 
     # Remove any existing locks
@@ -172,6 +177,9 @@ fix_permissions() {
     export DEBCONF_TMPDIR=/home/container/.var/cache/debconf/tmp.ci
     export DPKG_LOG=/home/container/.var/log/dpkg/log
     export APT_LOG=/home/container/.var/log/apt/log
+    export DPKG_FORCE_UNSAFE_IO=1
+    export DPKG_FORCE_CONFDEF=1
+    export DPKG_FORCE_CONFOLD=1
 }
 
 # Function to execute command with proper permissions

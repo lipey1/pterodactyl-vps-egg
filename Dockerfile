@@ -18,7 +18,8 @@ RUN apt-get update && \
         adduser \
         fakeroot \
         apt-utils \
-        cron && \
+        cron \
+        dbus && \
     rm -rf /var/lib/apt/lists/*
 
 # Configure locale
@@ -75,9 +76,19 @@ RUN mkdir -p /etc/dpkg/dpkg.cfg.d && \
     echo 'path-exclude=/usr/share/linda/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
     echo 'force-unsafe-io' > /etc/dpkg/dpkg.cfg.d/02_unsafe-io && \
     echo 'no-debsig' >> /etc/dpkg/dpkg.cfg.d/02_unsafe-io && \
+    echo 'force-confdef' >> /etc/dpkg/dpkg.cfg.d/02_unsafe-io && \
+    echo 'force-confold' >> /etc/dpkg/dpkg.cfg.d/02_unsafe-io && \
     echo 'admindir /home/container/.var/lib/dpkg' > /etc/dpkg/dpkg.cfg.d/03_custom && \
     echo 'root /home/container' >> /etc/dpkg/dpkg.cfg.d/03_custom && \
     echo 'log /home/container/.var/log/dpkg' >> /etc/dpkg/dpkg.cfg.d/03_custom
+
+# Create required system groups
+RUN groupadd -r messagebus && \
+    groupadd -r ssl-cert && \
+    groupadd -r input && \
+    groupadd -r audio && \
+    groupadd -r dip && \
+    groupadd -r plugdev
 
 # Ensure we run as root
 USER root
