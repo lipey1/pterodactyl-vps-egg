@@ -105,22 +105,15 @@ print_help_message() {
 
 # Function to fix package management permissions
 fix_permissions() {
+    # Create custom directories for apt
+    mkdir -p /home/container/apt/{cache,lists,log}
+    chmod -R 777 /home/container/apt
+
     # Remove any existing locks
     rm -f /var/lib/dpkg/lock* /var/lib/apt/lists/lock* /var/cache/apt/archives/lock* 2>/dev/null || true
-    
-    # Ensure directories are writable
-    mount -o remount,rw / 2>/dev/null || true
-    mount -o remount,rw /var/lib/apt 2>/dev/null || true
-    mount -o remount,rw /var/cache/apt 2>/dev/null || true
-    mount -o remount,rw /var/lib/dpkg 2>/dev/null || true
+    rm -f /home/container/apt/lists/lock* /home/container/apt/cache/archives/lock* 2>/dev/null || true
     
     # Set proper permissions for package management directories
-    chown -R _apt:root /var/lib/apt/lists/partial 2>/dev/null || true
-    chmod -R 700 /var/lib/apt/lists/partial 2>/dev/null || true
-    
-    chown -R _apt:root /var/cache/apt/archives/partial 2>/dev/null || true
-    chmod -R 700 /var/cache/apt/archives/partial 2>/dev/null || true
-    
     chmod -R 777 /var/lib/dpkg /var/lib/apt /var/cache/apt 2>/dev/null || true
     
     # Create and set permissions for key directories
@@ -130,6 +123,10 @@ fix_permissions() {
     # Ensure specific files are writable
     touch /var/lib/dpkg/status /var/lib/dpkg/available 2>/dev/null || true
     chmod 666 /var/lib/dpkg/status /var/lib/dpkg/available 2>/dev/null || true
+
+    # Create log directories with proper permissions
+    mkdir -p /var/log/apt /var/log/dpkg 2>/dev/null || true
+    chmod -R 777 /var/log/apt /var/log/dpkg 2>/dev/null || true
 }
 
 # Function to execute command with proper permissions
@@ -190,8 +187,8 @@ execute_command() {
             # Fix permissions before package management commands
             if [[ "$cmd" == "apt"* || "$cmd" == "apt-get"* || "$cmd" == "dpkg"* ]]; then
                 fix_permissions
-                # Execute with fakeroot to simulate root privileges
-                cmd="fakeroot $cmd"
+                # Execute with fakeroot and proper environment
+                cmd="fakeroot env APT_CONFIG=/etc/apt/apt.conf.d/99custom $cmd"
             fi
             
             # Execute command
