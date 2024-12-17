@@ -15,7 +15,8 @@ RUN apt-get update && \
         bzip2 \
         sudo \
         locales \
-        adduser && \
+        adduser \
+        fakeroot && \
     rm -rf /var/lib/apt/lists/*
 
 # Configure locale

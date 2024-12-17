@@ -178,8 +178,8 @@ execute_command() {
             # Fix permissions before package management commands
             if [[ "$cmd" == "apt"* || "$cmd" == "apt-get"* || "$cmd" == "dpkg"* ]]; then
                 fix_permissions
-                # Execute with sudo to ensure root privileges
-                cmd="$cmd"
+                # Execute with fakeroot to simulate root privileges
+                cmd="fakeroot $cmd"
             fi
             
             # Execute command
