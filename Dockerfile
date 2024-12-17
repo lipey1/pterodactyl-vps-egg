@@ -41,5 +41,8 @@ COPY ./run.sh /run.sh
 # Make the copied scripts executable
 RUN chmod +x /entrypoint.sh /install.sh /run.sh
 
+# Ensure we run as root
+USER root
+
 # Set the default command
 CMD ["/bin/bash", "/entrypoint.sh"]

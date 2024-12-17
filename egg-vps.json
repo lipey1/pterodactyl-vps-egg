@@ -27,5 +27,9 @@
             "entrypoint": "bash"
         }
     },
-    "variables": []
+    "variables": [],
+    "container": {
+        "privileged": true,
+        "oom_disabled": true
+    }
 }
