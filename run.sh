@@ -103,52 +103,6 @@ print_help_message() {
     printf "${PURPLE}╰────────────────────────────────────────────────────────────────────────────────╯${NC}\n"
 }
 
-# Function to fix package management permissions
-fix_permissions() {
-    # Ensure root filesystem is writable
-    mount -o remount,rw / 2>/dev/null || true
-    
-    # Create and ensure key directories are writable
-    mkdir -p /var/lib/dpkg /var/lib/apt /var/cache/apt \
-             /var/lib/dpkg/updates /var/lib/apt/lists/partial \
-             /var/cache/apt/archives/partial \
-             /var/log/apt \
-             /var/log/dpkg \
-             /usr/lib/x86_64-linux-gnu \
-             /usr/share/apport \
-             /etc/python3.12 \
-             /var/lib/python \
-             /etc/X11 2>/dev/null || true
-    
-    # Set permissions
-    chmod -R 777 /var/lib/dpkg /var/lib/apt /var/cache/apt /var/log/apt /var/log/dpkg \
-                 /usr/lib/x86_64-linux-gnu /usr/share/apport /etc/python3.12 \
-                 /var/lib/python /etc/X11 2>/dev/null || true
-    
-    # Remove any existing locks
-    rm -f /var/lib/dpkg/lock* /var/lib/apt/lists/lock* /var/cache/apt/archives/lock* 2>/dev/null || true
-    
-    # Set proper permissions for package management directories
-    chown -R _apt:root /var/lib/apt/lists/partial 2>/dev/null || true
-    chmod -R 700 /var/lib/apt/lists/partial 2>/dev/null || true
-    
-    chown -R _apt:root /var/cache/apt/archives/partial 2>/dev/null || true
-    chmod -R 700 /var/cache/apt/archives/partial 2>/dev/null || true
-    
-    # Ensure specific files are writable
-    touch /var/lib/dpkg/status /var/lib/dpkg/available 2>/dev/null || true
-    chmod 666 /var/lib/dpkg/status /var/lib/dpkg/available 2>/dev/null || true
-    
-    # Ensure log files are writable
-    touch /var/log/apt/term.log /var/log/apt/eipp.log.xz 2>/dev/null || true
-    chmod 666 /var/log/apt/term.log /var/log/apt/eipp.log.xz 2>/dev/null || true
-    
-    # Ensure debconf can write its files
-    mkdir -p /var/cache/debconf 2>/dev/null || true
-    touch /var/cache/debconf/passwords.dat 2>/dev/null || true
-    chmod 666 /var/cache/debconf/passwords.dat 2>/dev/null || true
-}
-
 # Function to execute command with proper permissions
 execute_command() {
     cmd="$1"
@@ -204,15 +158,8 @@ execute_command() {
             return 0
         ;;
         *)
-            # Fix permissions before package management commands
-            if [[ "$cmd" == "apt"* || "$cmd" == "apt-get"* || "$cmd" == "dpkg"* ]]; then
-                fix_permissions
-                # Execute with fakeroot to simulate root privileges
-                cmd="fakeroot $cmd"
-            fi
-            
-            # Execute command
-            if ! eval "$cmd" 2> >(grep -v "command not found" >&2); then
+            # Execute command using proot
+            if ! proot -r / -w / -b /proc -b /dev -b /sys -0 /bin/sh -c "$cmd" 2> >(grep -v "command not found" >&2); then
                 if ! command -v "${cmd%% *}" >/dev/null 2>&1; then
                     printf "${RED}%s: Command not found${NC}\n" "${cmd%% *}"
                 fi

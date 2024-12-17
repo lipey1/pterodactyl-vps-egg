@@ -29,9 +29,6 @@
     },
     "variables": [],
     "container": {
-        "privileged": true,
-        "oom_disabled": true,
-        "readonly_root": false,
-        "cap_add": ["SYS_ADMIN"]
+        "oom_disabled": true
     }
 }
