@@ -105,28 +105,34 @@ print_help_message() {
 
 # Function to fix package management permissions
 fix_permissions() {
-    # Create custom directories for apt
-    mkdir -p /home/container/apt/{cache,lists,log}
-    chmod -R 777 /home/container/apt
-
+    # Create all necessary directories in /home/container/.apt
+    mkdir -p /home/container/.apt/{cache,lists,log,archives} \
+             /home/container/.apt/cache/archives/partial \
+             /home/container/.apt/lists/partial \
+             /home/container/.dpkg/{updates,info,alternatives,triggers} \
+             /home/container/.debconf
+    chmod -R 777 /home/container/.apt /home/container/.dpkg /home/container/.debconf
+ 
+    # Initialize status file if it doesn't exist
+    if [ ! -f /home/container/.apt/status ]; then
+        touch /home/container/.apt/status
+        chmod 644 /home/container/.apt/status
+    fi
+ 
+    # Initialize extended_states if it doesn't exist
+    if [ ! -f /home/container/.apt/extended_states ]; then
+        touch /home/container/.apt/extended_states
+        chmod 644 /home/container/.apt/extended_states
+    fi
+ 
     # Remove any existing locks
-    rm -f /var/lib/dpkg/lock* /var/lib/apt/lists/lock* /var/cache/apt/archives/lock* 2>/dev/null || true
-    rm -f /home/container/apt/lists/lock* /home/container/apt/cache/archives/lock* 2>/dev/null || true
-    
-    # Set proper permissions for package management directories
-    chmod -R 777 /var/lib/dpkg /var/lib/apt /var/cache/apt 2>/dev/null || true
-    
-    # Create and set permissions for key directories
-    mkdir -p /var/lib/dpkg/updates /var/lib/apt/lists/partial /var/cache/apt/archives/partial 2>/dev/null || true
-    chmod -R 777 /var/lib/dpkg/updates /var/lib/apt/lists/partial /var/cache/apt/archives/partial 2>/dev/null || true
-    
-    # Ensure specific files are writable
-    touch /var/lib/dpkg/status /var/lib/dpkg/available 2>/dev/null || true
-    chmod 666 /var/lib/dpkg/status /var/lib/dpkg/available 2>/dev/null || true
-
-    # Create log directories with proper permissions
-    mkdir -p /var/log/apt /var/log/dpkg 2>/dev/null || true
-    chmod -R 777 /var/log/apt /var/log/dpkg 2>/dev/null || true
+    rm -f /home/container/.apt/lists/lock* \
+          /home/container/.apt/cache/archives/lock* \
+          /home/container/.dpkg/lock* 2>/dev/null || true
+ 
+    # Set environment variables for package management
+    export DPKG_ADMINDIR=/home/container/.dpkg
+    export DEBCONF_ADMIN_DIR=/home/container/.debconf
 }
 
 # Function to execute command with proper permissions
@@ -187,8 +193,12 @@ execute_command() {
             # Fix permissions before package management commands
             if [[ "$cmd" == "apt"* || "$cmd" == "apt-get"* || "$cmd" == "dpkg"* ]]; then
                 fix_permissions
-                # Execute with fakeroot and proper environment
-                cmd="fakeroot env APT_CONFIG=/etc/apt/apt.conf.d/99custom $cmd"
+                # Execute with proper environment variables
+                cmd="env DEBIAN_FRONTEND=noninteractive \
+                     DPKG_ADMINDIR=/home/container/.dpkg \
+                     DEBCONF_ADMIN_DIR=/home/container/.debconf \
+                     APT_CONFIG=/etc/apt/apt.conf.d/99custom \
+                     $cmd"
             fi
             
             # Execute command

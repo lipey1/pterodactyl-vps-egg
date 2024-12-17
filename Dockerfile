@@ -27,22 +27,8 @@ RUN update-locale lang=en_US.UTF-8 && \
 # Set up working directory and permissions
 RUN mkdir -p /home/container && \
     chmod -R 777 /home/container && \
-    mkdir -p /var/lib/dpkg /var/lib/apt/lists /var/cache/apt/archives && \
-    chmod -R 777 /var/lib/dpkg /var/lib/apt /var/cache/apt && \
-    mkdir -p /var/lib/dpkg/updates /var/lib/apt/lists/partial /var/cache/apt/archives/partial && \
-    chmod -R 777 /var/lib/dpkg/updates /var/lib/apt/lists/partial /var/cache/apt/archives/partial && \
-    touch /var/lib/dpkg/status /var/lib/dpkg/available && \
-    chmod 666 /var/lib/dpkg/status /var/lib/dpkg/available && \
     mkdir -p /etc/apt/apt.conf.d && \
     chmod -R 777 /etc/apt
-
-# Create necessary directories with proper permissions
-RUN mkdir -p /var/log/apt && \
-    chmod -R 777 /var/log/apt && \
-    mkdir -p /var/log/dpkg && \
-    chmod -R 777 /var/log/dpkg && \
-    mkdir -p /etc/dpkg/dpkg.cfg.d && \
-    chmod -R 777 /etc/dpkg
 
 # Set up working directory
 WORKDIR /home/container
@@ -56,9 +42,20 @@ COPY ./run.sh /run.sh
 RUN chmod +x /entrypoint.sh /install.sh /run.sh
 
 # Create a special apt configuration to handle read-only filesystem
-RUN echo 'Dir::Cache "/home/container/apt/cache/";' > /etc/apt/apt.conf.d/99custom && \
-    echo 'Dir::State::lists "/home/container/apt/lists/";' >> /etc/apt/apt.conf.d/99custom && \
-    echo 'Dir::Log "/home/container/apt/log/";' >> /etc/apt/apt.conf.d/99custom
+RUN echo 'Dir::Cache "/home/container/.apt/cache/";' > /etc/apt/apt.conf.d/99custom && \
+    echo 'Dir::State::lists "/home/container/.apt/lists/";' >> /etc/apt/apt.conf.d/99custom && \
+    echo 'Dir::Log "/home/container/.apt/log/";' >> /etc/apt/apt.conf.d/99custom && \
+    echo 'Dir::State::extended_states "/home/container/.apt/extended_states";' >> /etc/apt/apt.conf.d/99custom && \
+    echo 'Dir::State::status "/home/container/.apt/status";' >> /etc/apt/apt.conf.d/99custom && \
+    echo 'Dir::State "/home/container/.apt/";' >> /etc/apt/apt.conf.d/99custom
+
+# Create dpkg configuration
+RUN echo 'path-exclude=/usr/share/doc/*' > /etc/dpkg/dpkg.cfg.d/01_nodoc && \
+    echo 'path-exclude=/usr/share/man/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
+    echo 'path-exclude=/usr/share/groff/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
+    echo 'path-exclude=/usr/share/info/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
+    echo 'path-exclude=/usr/share/lintian/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
+    echo 'path-exclude=/usr/share/linda/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc
 
 # Ensure we run as root
 USER root
