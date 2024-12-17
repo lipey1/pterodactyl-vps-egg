@@ -15,15 +15,14 @@ RUN apt-get update && \
         bzip2 \
         sudo \
         locales \
-        adduser \
-        proot && \
+        adduser && \
     rm -rf /var/lib/apt/lists/*
 
 # Configure locale
 RUN update-locale lang=en_US.UTF-8 && \
     dpkg-reconfigure --frontend noninteractive locales
 
-# Set up working directory and permissions
+# Set up working directory and history file
 RUN mkdir -p /home/container && \
     touch /home/container/.custom_shell_history && \
     chmod -R 777 /home/container
@@ -35,10 +34,9 @@ WORKDIR /home/container
 COPY ./entrypoint.sh /entrypoint.sh
 COPY ./install.sh /install.sh
 COPY ./run.sh /run.sh
-COPY ./helper.sh /helper.sh
 
 # Make the copied scripts executable
-RUN chmod +x /entrypoint.sh /install.sh /run.sh /helper.sh
+RUN chmod +x /entrypoint.sh /install.sh /run.sh
 
 # Set the default command
 CMD ["/bin/bash", "/entrypoint.sh"]

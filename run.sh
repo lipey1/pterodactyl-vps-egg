@@ -103,6 +103,27 @@ print_help_message() {
     printf "${PURPLE}╰────────────────────────────────────────────────────────────────────────────────╯${NC}\n"
 }
 
+# Function to fix package management permissions
+fix_permissions() {
+    # Remove any existing locks
+    rm -f /var/lib/dpkg/lock* /var/lib/apt/lists/lock* /var/cache/apt/archives/lock* 2>/dev/null || true
+    
+    # Set proper permissions for package management directories
+    chmod -R 777 /var/lib/dpkg /var/lib/apt /var/cache/apt /var/lib/apt/lists 2>/dev/null || true
+    
+    # Create and set permissions for key directories
+    mkdir -p /var/lib/dpkg/updates /var/lib/apt/lists/partial /var/cache/apt/archives/partial 2>/dev/null || true
+    chmod -R 777 /var/lib/dpkg/updates /var/lib/apt/lists/partial /var/cache/apt/archives/partial 2>/dev/null || true
+    
+    # Ensure specific files are writable
+    touch /var/lib/dpkg/status /var/lib/dpkg/available 2>/dev/null || true
+    chmod 666 /var/lib/dpkg/status /var/lib/dpkg/available 2>/dev/null || true
+    
+    # Fix lock files
+    touch /var/lib/dpkg/lock /var/lib/dpkg/lock-frontend 2>/dev/null || true
+    chmod 666 /var/lib/dpkg/lock /var/lib/dpkg/lock-frontend 2>/dev/null || true
+}
+
 # Function to execute command with proper permissions
 execute_command() {
     cmd="$1"
@@ -158,16 +179,15 @@ execute_command() {
             return 0
         ;;
         *)
-            # Execute command using proot with full root simulation
-            if ! proot -S . \
-                      -b /dev \
-                      -b /proc \
-                      -b /sys \
-                      -b /etc/resolv.conf \
-                      -w / \
-                      -r / \
-                      -0 \
-                      /bin/sh -c "$cmd" 2> >(grep -v "command not found" >&2); then
+            # Fix permissions before any apt-related commands
+            if [[ "$cmd" == *"apt"* || "$cmd" == *"dpkg"* || "$cmd" == "apt-get"* ]]; then
+                fix_permissions
+                # Ensure we're running with proper environment
+                cmd="env DEBIAN_FRONTEND=noninteractive $cmd"
+            fi
+            
+            # Execute command
+            if ! eval "$cmd" 2> >(grep -v "command not found" >&2); then
                 if ! command -v "${cmd%% *}" >/dev/null 2>&1; then
                     printf "${RED}%s: Command not found${NC}\n" "${cmd%% *}"
                 fi
@@ -199,6 +219,9 @@ print_instructions
 
 # Ensure we start in /home/container
 cd /home/container
+
+# Fix permissions
+fix_permissions
 
 # Main command loop
 while true; do
