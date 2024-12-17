@@ -15,17 +15,30 @@ RUN apt-get update && \
         bzip2 \
         sudo \
         locales \
-        adduser && \
+        adduser \
+        fakeroot && \
     rm -rf /var/lib/apt/lists/*
 
 # Configure locale
 RUN update-locale lang=en_US.UTF-8 && \
     dpkg-reconfigure --frontend noninteractive locales
 
-# Set up working directory and history file
+# Set up working directory and permissions
 RUN mkdir -p /home/container && \
     touch /home/container/.custom_shell_history && \
-    chmod -R 777 /home/container
+    chmod -R 777 /home/container && \
+    mkdir -p /var/lib/dpkg /var/lib/apt /var/cache/apt \
+           /var/lib/dpkg/updates /var/lib/apt/lists/partial \
+           /var/cache/apt/archives/partial && \
+    touch /var/lib/dpkg/lock-frontend && \
+    touch /var/lib/apt/lists/lock && \
+    touch /var/cache/apt/archives/lock && \
+    chmod -R 777 /var/lib/dpkg /var/lib/apt /var/cache/apt && \
+    chown -R _apt:root /var/lib/apt/lists/partial && \
+    chown -R _apt:root /var/cache/apt/archives/partial
+
+# Create a volume for package management
+VOLUME ["/var/lib/apt", "/var/cache/apt", "/var/lib/dpkg"]
 
 # Set up working directory
 WORKDIR /home/container
@@ -37,6 +50,9 @@ COPY ./run.sh /run.sh
 
 # Make the copied scripts executable
 RUN chmod +x /entrypoint.sh /install.sh /run.sh
+
+# Ensure we run as root
+USER root
 
 # Set the default command
 CMD ["/bin/bash", "/entrypoint.sh"]

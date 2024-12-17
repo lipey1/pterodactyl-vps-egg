@@ -108,8 +108,20 @@ fix_permissions() {
     # Remove any existing locks
     rm -f /var/lib/dpkg/lock* /var/lib/apt/lists/lock* /var/cache/apt/archives/lock* 2>/dev/null || true
     
+    # Ensure directories are writable
+    mount -o remount,rw / 2>/dev/null || true
+    mount -o remount,rw /var/lib/apt 2>/dev/null || true
+    mount -o remount,rw /var/cache/apt 2>/dev/null || true
+    mount -o remount,rw /var/lib/dpkg 2>/dev/null || true
+    
     # Set proper permissions for package management directories
-    chmod -R 777 /var/lib/dpkg /var/lib/apt /var/cache/apt /var/lib/apt/lists 2>/dev/null || true
+    chown -R _apt:root /var/lib/apt/lists/partial 2>/dev/null || true
+    chmod -R 700 /var/lib/apt/lists/partial 2>/dev/null || true
+    
+    chown -R _apt:root /var/cache/apt/archives/partial 2>/dev/null || true
+    chmod -R 700 /var/cache/apt/archives/partial 2>/dev/null || true
+    
+    chmod -R 777 /var/lib/dpkg /var/lib/apt /var/cache/apt 2>/dev/null || true
     
     # Create and set permissions for key directories
     mkdir -p /var/lib/dpkg/updates /var/lib/apt/lists/partial /var/cache/apt/archives/partial 2>/dev/null || true
@@ -118,10 +130,6 @@ fix_permissions() {
     # Ensure specific files are writable
     touch /var/lib/dpkg/status /var/lib/dpkg/available 2>/dev/null || true
     chmod 666 /var/lib/dpkg/status /var/lib/dpkg/available 2>/dev/null || true
-    
-    # Fix lock files
-    touch /var/lib/dpkg/lock /var/lib/dpkg/lock-frontend 2>/dev/null || true
-    chmod 666 /var/lib/dpkg/lock /var/lib/dpkg/lock-frontend 2>/dev/null || true
 }
 
 # Function to execute command with proper permissions
@@ -179,11 +187,11 @@ execute_command() {
             return 0
         ;;
         *)
-            # Fix permissions before any apt-related commands
-            if [[ "$cmd" == *"apt"* || "$cmd" == *"dpkg"* || "$cmd" == "apt-get"* ]]; then
+            # Fix permissions before package management commands
+            if [[ "$cmd" == "apt"* || "$cmd" == "apt-get"* || "$cmd" == "dpkg"* ]]; then
                 fix_permissions
-                # Ensure we're running with proper environment
-                cmd="env DEBIAN_FRONTEND=noninteractive $cmd"
+                # Execute with fakeroot to simulate root privileges
+                cmd="fakeroot $cmd"
             fi
             
             # Execute command
@@ -219,9 +227,6 @@ print_instructions
 
 # Ensure we start in /home/container
 cd /home/container
-
-# Fix permissions
-fix_permissions
 
 # Main command loop
 while true; do
