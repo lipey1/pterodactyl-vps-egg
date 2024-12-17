@@ -166,8 +166,6 @@ execute_command() {
                       -b /etc/resolv.conf \
                       -w / \
                       -r / \
-                      --link2symlink \
-                      --kill-on-exit \
                       -0 \
                       /bin/sh -c "$cmd" 2> >(grep -v "command not found" >&2); then
                 if ! command -v "${cmd%% *}" >/dev/null 2>&1; then
