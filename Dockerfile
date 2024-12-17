@@ -33,7 +33,12 @@ RUN mkdir -p /home/container && \
     touch /var/lib/dpkg/lock-frontend && \
     touch /var/lib/apt/lists/lock && \
     touch /var/cache/apt/archives/lock && \
-    chmod -R 777 /var/lib/dpkg /var/lib/apt /var/cache/apt
+    chmod -R 777 /var/lib/dpkg /var/lib/apt /var/cache/apt && \
+    chown -R _apt:root /var/lib/apt/lists/partial && \
+    chown -R _apt:root /var/cache/apt/archives/partial
+
+# Create a volume for package management
+VOLUME ["/var/lib/apt", "/var/cache/apt", "/var/lib/dpkg"]
 
 # Set up working directory
 WORKDIR /home/container

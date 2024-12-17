@@ -108,7 +108,19 @@ fix_permissions() {
     # Remove any existing locks
     rm -f /var/lib/dpkg/lock* /var/lib/apt/lists/lock* /var/cache/apt/archives/lock* 2>/dev/null || true
     
+    # Ensure directories are writable
+    mount -o remount,rw / 2>/dev/null || true
+    mount -o remount,rw /var/lib/apt 2>/dev/null || true
+    mount -o remount,rw /var/cache/apt 2>/dev/null || true
+    mount -o remount,rw /var/lib/dpkg 2>/dev/null || true
+    
     # Set proper permissions for package management directories
+    chown -R _apt:root /var/lib/apt/lists/partial 2>/dev/null || true
+    chmod -R 700 /var/lib/apt/lists/partial 2>/dev/null || true
+    
+    chown -R _apt:root /var/cache/apt/archives/partial 2>/dev/null || true
+    chmod -R 700 /var/cache/apt/archives/partial 2>/dev/null || true
+    
     chmod -R 777 /var/lib/dpkg /var/lib/apt /var/cache/apt 2>/dev/null || true
     
     # Create and set permissions for key directories

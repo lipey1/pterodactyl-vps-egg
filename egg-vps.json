@@ -30,6 +30,7 @@
     "variables": [],
     "container": {
         "privileged": true,
-        "oom_disabled": true
+        "oom_disabled": true,
+        "readonly_root": false
     }
 }
