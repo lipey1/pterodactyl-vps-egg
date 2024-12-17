@@ -83,12 +83,9 @@ RUN mkdir -p /etc/dpkg/dpkg.cfg.d && \
     echo 'log /home/container/.var/log/dpkg' >> /etc/dpkg/dpkg.cfg.d/03_custom
 
 # Create required system groups
-RUN groupadd -r messagebus && \
-    groupadd -r ssl-cert && \
-    groupadd -r input && \
-    groupadd -r audio && \
-    groupadd -r dip && \
-    groupadd -r plugdev
+RUN for group in messagebus ssl-cert input audio dip plugdev; do \
+        getent group $group > /dev/null 2>&1 || groupadd -r $group; \
+    done
 
 # Ensure we run as root
 USER root
