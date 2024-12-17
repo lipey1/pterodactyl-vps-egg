@@ -25,14 +25,10 @@ RUN update-locale lang=en_US.UTF-8 && \
 # Set up working directory and permissions
 RUN mkdir -p /home/container && \
     touch /home/container/.custom_shell_history && \
-    chown -R root:root /home/container && \
-    chmod -R 755 /home/container && \
-    chmod 777 /home/container/.custom_shell_history
-
-# Ensure package management directories have correct permissions
-RUN mkdir -p /var/lib/dpkg /var/lib/apt/lists /var/cache/apt/archives && \
-    chown -R root:root /var/lib/dpkg /var/lib/apt /var/cache/apt && \
-    chmod -R 755 /var/lib/dpkg /var/lib/apt /var/cache/apt
+    chmod -R 777 /home/container && \
+    chmod 777 /var/lib/dpkg /var/lib/apt /var/cache/apt /var/lib/dpkg/lock* /var/lib/apt/lists/lock* /var/cache/apt/archives/lock* && \
+    mkdir -p /var/lib/dpkg/updates /var/lib/apt/lists/partial /var/cache/apt/archives/partial && \
+    chmod 777 /var/lib/dpkg/updates /var/lib/apt/lists/partial /var/cache/apt/archives/partial
 
 # Set up working directory
 WORKDIR /home/container
